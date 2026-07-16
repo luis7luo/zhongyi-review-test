@@ -583,8 +583,7 @@
       gap: var(--space-2);
     }
 
-    .filters select,
-    .reset-filter {
+    .filters select {
       min-width: 116px;
       padding: 0 var(--space-3);
       border: 1px solid var(--line);
@@ -594,7 +593,7 @@
       font-size: 13px;
     }
 
-    .reset-filter { min-width: 96px; font-weight: 600; }
+    #categorySelect { min-width: 160px; }
     .session-status { color: var(--muted-ink); font-size: 12px; white-space: nowrap; }
 
     .mobile-category-panel { display: none; }
@@ -874,6 +873,8 @@
       color: var(--paper);
     }
 
+    .action-label-compact { display: none; }
+
     .site-footer {
       padding: var(--space-4) max(var(--space-5), calc((100vw - 1280px) / 2));
       border-top: 1px solid var(--line);
@@ -952,9 +953,9 @@
       .results { grid-template-columns: 1fr; max-height: 280px; }
       .study { padding: var(--space-3) var(--space-4) var(--space-5); }
       .toolbar { display: block; min-height: 0; margin-bottom: var(--space-3); }
-      .filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .filters select { min-width: 0; width: 100%; padding: 0 var(--space-2); font-size: 12px; }
-      .reset-filter { grid-column: 1 / -1; width: 100%; }
+      #categorySelect { min-width: 0; }
       .session-status { margin-top: var(--space-3); white-space: normal; }
       .mobile-category-panel { display: block; margin-bottom: var(--space-4); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
       .mobile-category-panel summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); color: var(--ink); font-size: 13px; font-weight: 600; list-style: none; }
@@ -984,13 +985,13 @@
       .question-context { grid-template-columns: 1fr; gap: var(--space-4); margin-top: 0; padding-top: var(--space-4); }
       .context-block + .context-block { padding: var(--space-4) 0 0; border-top: 1px solid var(--line); border-left: 0; }
       .actions {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: var(--space-2);
         padding: var(--space-2) var(--space-4) max(var(--space-2), env(safe-area-inset-bottom));
       }
-      .action-button { min-width: 0; min-height: 44px; padding: 0 var(--space-1); font-size: 12px; }
-      #revealBtn, #nextBtn { grid-column: span 3; min-height: 48px; }
-      #knowBtn, #againBtn, #favoriteBtn { grid-column: span 2; }
+      .action-button { min-width: 0; min-height: 48px; padding: 0 var(--space-1); font-size: 12px; }
+      .action-label-full { display: none; }
+      .action-label-compact { display: inline; }
       .site-footer { padding: var(--space-4); }
     }
 
@@ -1103,7 +1104,9 @@
                 <option value="review">待加强</option>
                 <option value="favorite">收藏</option>
               </select>
-              <button class="reset-filter" id="resetFilterBtn" type="button">全部分类</button>
+              <select id="categorySelect" aria-label="分类">
+                <option value="">全部分类</option>
+              </select>
             </div>
             <div class="session-status" id="sessionStatus">正在载入题库</div>
           </div>
@@ -1149,11 +1152,11 @@
         </section>
 
         <footer class="actions" aria-label="学习反馈">
-          <button class="action-button primary" id="revealBtn" type="button" disabled>看答案</button>
-          <button class="action-button" id="knowBtn" type="button" disabled>会了</button>
-          <button class="action-button emphasis" id="againBtn" type="button" disabled>再来一遍</button>
-          <button class="action-button" id="favoriteBtn" type="button" aria-pressed="false" disabled>收藏</button>
-          <button class="action-button secondary-primary" id="nextBtn" type="button" disabled>随机下一题</button>
+          <button class="action-button primary" id="revealBtn" type="button" disabled><span class="action-label-full">看答案</span><span class="action-label-compact">答案</span></button>
+          <button class="action-button" id="knowBtn" type="button" disabled><span class="action-label-full">会了</span><span class="action-label-compact">会了</span></button>
+          <button class="action-button emphasis" id="againBtn" type="button" disabled><span class="action-label-full">再来一遍</span><span class="action-label-compact">再练</span></button>
+          <button class="action-button" id="favoriteBtn" type="button" aria-pressed="false" disabled><span class="action-label-full">收藏</span><span class="action-label-compact">收藏</span></button>
+          <button class="action-button secondary-primary" id="nextBtn" type="button" disabled><span class="action-label-full">随机下一题</span><span class="action-label-compact">下一题</span></button>
         </footer>
       </main>
     </div>
@@ -1246,6 +1249,14 @@
       });
     };
 
+    const renderCategorySelect = () => {
+      const select = $("categorySelect");
+      const categories = categoryData().map(entry => entry.category);
+      select.innerHTML = `<option value="">全部分类</option>${categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join("")}`;
+      if (!categories.includes(activeCategory)) activeCategory = "";
+      select.value = activeCategory;
+    };
+
     const categoryMarkup = (categories) => categories.map(({category, done, total, pct}) => `
       <button class="cat ${category === activeCategory ? "active" : ""}" type="button" data-category="${escapeHtml(category)}">
         <span class="cat-row"><span class="cat-name">${escapeHtml(category)}</span><span>${done}/${total}</span></span>
@@ -1256,6 +1267,7 @@
       document.querySelectorAll("[data-category]").forEach(node => node.addEventListener("click", () => {
         activeCategory = node.dataset.category === activeCategory ? "" : node.dataset.category;
         $("poolSelect").value = "all";
+        $("categorySelect").value = activeCategory;
         pick();
         renderStats();
       }));
@@ -1329,13 +1341,19 @@
       mark.classList.add("revealed");
     };
 
+    const setActionLabel = (id, full, compact) => {
+      const button = $(id);
+      button.querySelector(".action-label-full").textContent = full;
+      button.querySelector(".action-label-compact").textContent = compact;
+    };
+
     const updateActionAvailability = () => {
       const available = Boolean(current);
       ["revealBtn", "knowBtn", "againBtn", "favoriteBtn", "nextBtn"].forEach(id => { $(id).disabled = !available; });
       $("revealBtn").disabled = !available || revealed;
-      $("revealBtn").textContent = revealed ? "答案已展开" : "看答案";
+      setActionLabel("revealBtn", revealed ? "答案已展开" : "看答案", revealed ? "已展开" : "答案");
       const favorite = available && loadState().favorite.includes(current.id);
-      $("favoriteBtn").textContent = favorite ? "已收藏" : "收藏";
+      setActionLabel("favoriteBtn", favorite ? "已收藏" : "收藏", favorite ? "已收藏" : "收藏");
       $("favoriteBtn").setAttribute("aria-pressed", String(favorite));
     };
 
@@ -1435,6 +1453,7 @@
         $("poolSelect").value = "all";
         renderSubjectTabs();
         renderModules();
+        renderCategorySelect();
         pick(item.id);
         toggleSearch(false);
         $("studyQuestion").scrollIntoView({behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
@@ -1456,6 +1475,7 @@
     const renderAll = () => {
       renderSubjectTabs();
       renderModules();
+      renderCategorySelect();
       renderSourceSummary();
       pick();
     };
@@ -1480,10 +1500,10 @@
       }
     };
 
-    $("moduleSelect").addEventListener("change", () => { activeModule = $("moduleSelect").value; activeCategory = ""; $("poolSelect").value = "all"; pick(); renderStats(); });
+    $("moduleSelect").addEventListener("change", () => { activeModule = $("moduleSelect").value; activeCategory = ""; $("poolSelect").value = "all"; renderCategorySelect(); pick(); renderStats(); });
     $("modeSelect").addEventListener("change", () => pick(current?.id));
     $("poolSelect").addEventListener("change", () => pick());
-    $("resetFilterBtn").addEventListener("click", () => { activeCategory = ""; $("poolSelect").value = "all"; pick(); renderStats(); });
+    $("categorySelect").addEventListener("change", () => { activeCategory = $("categorySelect").value; $("poolSelect").value = "all"; pick(); renderStats(); });
     $("searchToggleBtn").addEventListener("click", () => toggleSearch());
     $("revealBtn").addEventListener("click", () => { revealed = true; renderAnswer(); updateActionAvailability(); });
     $("knowBtn").addEventListener("click", () => mark("know"));
