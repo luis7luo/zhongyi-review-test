@@ -581,7 +581,7 @@
 
     .toolbar {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: space-between;
       gap: var(--space-4);
       min-height: 48px;
@@ -594,8 +594,22 @@
       gap: var(--space-2);
     }
 
-    .filters select {
+    .filter-field {
+      display: grid;
+      gap: var(--space-1);
       min-width: 116px;
+    }
+
+    .filter-field > span {
+      color: var(--muted-ink);
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .filters select {
+      width: 100%;
+      min-width: 0;
       padding: 0 var(--space-3);
       border: 1px solid var(--line);
       border-radius: 4px;
@@ -604,7 +618,7 @@
       font-size: 13px;
     }
 
-    #categorySelect { min-width: 160px; }
+    .category-filter { min-width: 160px; }
 
     .session-tools {
       display: flex;
@@ -1054,6 +1068,11 @@
       .band-state { display: none; }
       .band-progress { padding-right: 0; }
       .study { padding-right: var(--space-5); padding-left: var(--space-5); }
+      .toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+      .filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filter-field, .category-filter { min-width: 0; }
+      .session-tools { flex-direction: column; align-items: flex-end; gap: var(--space-1); }
+      .session-status { max-width: 220px; text-align: right; white-space: normal; }
       .question-layout { grid-template-columns: 56px minmax(0, 1fr); grid-template-rows: minmax(232px, auto) auto auto; column-gap: var(--space-5); }
       .question-context {
         grid-column: 2;
@@ -1116,10 +1135,10 @@
       .study { padding: var(--space-3) var(--space-4) var(--space-5); }
       .toolbar { display: block; min-height: 0; margin-bottom: var(--space-3); }
       .filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filter-field, .category-filter { min-width: 0; width: 100%; }
       .filters select { min-width: 0; width: 100%; padding: 0 var(--space-2); font-size: 12px; }
-      #categorySelect { min-width: 0; }
-      .session-tools { justify-content: space-between; margin-top: var(--space-3); }
-      .session-status { white-space: normal; }
+      .session-tools { flex-direction: row; align-items: center; justify-content: space-between; margin-top: var(--space-3); }
+      .session-status { max-width: none; text-align: left; white-space: normal; }
       .edit-label-full { display: none; }
       .edit-label-compact { display: inline; }
       .mobile-category-panel { display: block; margin-bottom: var(--space-4); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -1263,19 +1282,19 @@
         <section class="study" id="studyQuestion" aria-labelledby="promptName">
           <div class="toolbar">
             <div class="filters" aria-label="复习设置">
-              <select id="moduleSelect" aria-label="模块"></select>
-              <select id="modeSelect" aria-label="题型">
-                <option value="direct">正向测试</option>
-                <option value="reverse">反向测试</option>
-              </select>
-              <select id="poolSelect" aria-label="范围">
-                <option value="all">全部范围</option>
-                <option value="review">待加强</option>
-                <option value="favorite">收藏</option>
-              </select>
-              <select id="categorySelect" aria-label="分类">
-                <option value="">全部分类</option>
-              </select>
+              <label class="filter-field"><span>模块</span><select id="moduleSelect" aria-label="模块"></select></label>
+              <label class="filter-field"><span>题型</span><select id="modeSelect" aria-label="题型">
+                  <option value="direct">正向测试</option>
+                  <option value="reverse">反向测试</option>
+                </select></label>
+              <label class="filter-field"><span>复习范围</span><select id="poolSelect" aria-label="复习范围">
+                  <option value="all">全部题目</option>
+                  <option value="review">待加强</option>
+                  <option value="favorite">收藏</option>
+                </select></label>
+              <label class="filter-field category-filter"><span>分类</span><select id="categorySelect" aria-label="分类">
+                  <option value="">全部分类</option>
+                </select></label>
             </div>
             <div class="session-tools">
               <button class="edit-answer-button" id="editAnswerBtn" type="button" disabled>
@@ -1406,6 +1425,16 @@
     const defaultAnswerFor = (item) => item?.primaryAnswer || "见附加信息";
     const hasCustomAnswer = (item) => Boolean(item?.id && customAnswers[item.id]);
     const directAnswerFor = (item) => hasCustomAnswer(item) ? customAnswers[item.id] : defaultAnswerFor(item);
+    const isSourceField = (key) => String(key || "").endsWith("来源");
+    const searchTextFor = (item) => [
+      item.name,
+      item.subject,
+      item.module,
+      item.category,
+      directAnswerFor(item),
+      item.reversePrompt,
+      ...Object.entries(item.extra || {}).filter(([key]) => !isSourceField(key)).flatMap(([key, value]) => [key, value])
+    ].filter(Boolean).join(" ");
 
     const currentItems = () => items.filter(item => item.subject === activeSubject && item.module === activeModule);
     const filteredItems = () => {
@@ -1538,7 +1567,7 @@
         return;
       }
       const answer = answerFor(current);
-      const extras = Object.entries(current.extra || {}).filter(([key, value]) => value && value !== answer && key !== "功效来源");
+      const extras = Object.entries(current.extra || {}).filter(([key, value]) => value && value !== answer && !isSourceField(key));
       const customBadge = hasCustomAnswer(current) ? `<span class="custom-answer-badge">我的版本</span>` : "";
       box.className = "answer-block";
       box.innerHTML = `
@@ -1703,7 +1732,7 @@
       }
       const scope = $("searchScope").value;
       const base = scope === "all" ? items : items.filter(item => item.subject === activeSubject);
-      const hits = base.filter(item => `${JSON.stringify(item)} ${directAnswerFor(item)}`.toLowerCase().includes(query)).slice(0, 50);
+      const hits = base.filter(item => searchTextFor(item).toLowerCase().includes(query)).slice(0, 50);
       const scopeText = scope === "all" ? "全部科目" : activeSubject;
       $("searchNote").textContent = hits.length ? `${scopeText}找到 ${hits.length} 条结果，点击即可切换到对应题目。` : `${scopeText}没有找到“${$("searchInput").value.trim()}”。`;
       $("results").innerHTML = hits.map(item => `
