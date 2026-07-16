@@ -89,6 +89,8 @@
     .skip-link:focus { transform: translateY(0); }
 
     .app {
+      display: flex;
+      flex-direction: column;
       min-height: 100vh;
       min-height: 100dvh;
       background: var(--paper);
@@ -183,8 +185,9 @@
     .app-body {
       display: grid;
       grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      flex: 1 0 auto;
       min-width: 0;
-      align-items: start;
+      align-items: stretch;
     }
 
     .sidebar {
@@ -372,7 +375,14 @@
       opacity: .58;
     }
 
-    .workspace { min-width: 0; background: var(--paper); }
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: calc(100vh - var(--topbar-height));
+      min-height: calc(100dvh - var(--topbar-height));
+      background: var(--paper);
+    }
 
     .chapter-band {
       display: grid;
@@ -564,6 +574,7 @@
     }
 
     .study {
+      flex: 1 1 auto;
       min-width: 0;
       padding: var(--space-5) var(--space-7) var(--space-6);
     }
@@ -594,7 +605,42 @@
     }
 
     #categorySelect { min-width: 160px; }
-    .session-status { color: var(--muted-ink); font-size: 12px; white-space: nowrap; }
+
+    .session-tools {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      min-width: 0;
+    }
+
+    .session-status {
+      color: var(--muted-ink);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .edit-answer-button {
+      flex: 0 0 auto;
+      min-height: 44px;
+      padding: 0 var(--space-3);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      transition: border-color var(--ease), color var(--ease), background-color var(--ease);
+    }
+
+    .edit-answer-button:hover:not(:disabled),
+    .edit-answer-button.is-custom {
+      border-color: var(--seal);
+      color: var(--seal);
+    }
+
+    .edit-answer-button.is-custom { background: var(--paper-deep); }
+    .edit-label-compact { display: none; }
 
     .mobile-category-panel { display: none; }
 
@@ -740,11 +786,29 @@
     }
 
     .answer-label {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
       margin: var(--space-1) 0 0;
       color: var(--seal);
       font-size: 12px;
       font-weight: 600;
       letter-spacing: .08em;
+    }
+
+    .custom-answer-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 var(--space-2);
+      border: 1px solid var(--seal);
+      color: var(--seal);
+      font-family: var(--ui-font);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0;
+      white-space: nowrap;
     }
 
     .answer-main {
@@ -875,6 +939,104 @@
 
     .action-label-compact { display: none; }
 
+    .custom-modal {
+      position: fixed;
+      z-index: 50;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: var(--space-4);
+      background: rgba(37, 40, 36, .42);
+    }
+
+    .custom-dialog {
+      width: min(620px, 100%);
+      max-height: min(86vh, 760px);
+      padding: var(--space-6);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--paper);
+      box-shadow: 0 18px 52px rgba(37, 40, 36, .18);
+      overflow: auto;
+    }
+
+    .custom-dialog h2 {
+      margin: 0;
+      font-family: var(--formal-font);
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .custom-help {
+      margin: var(--space-2) 0 var(--space-5);
+      color: var(--muted-ink);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .custom-field-label {
+      display: block;
+      margin-bottom: var(--space-2);
+      color: var(--muted-ink);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .custom-dialog textarea {
+      width: 100%;
+      min-height: 190px;
+      resize: vertical;
+      padding: var(--space-3);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--paper-deep);
+      color: var(--ink);
+      font: inherit;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .custom-dialog textarea:focus-visible {
+      outline: 2px solid var(--seal);
+      outline-offset: 2px;
+    }
+
+    .custom-message {
+      min-height: 22px;
+      margin-top: var(--space-2);
+      color: var(--seal);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .custom-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+    }
+
+    .custom-actions button {
+      min-height: 44px;
+      padding: 0 var(--space-4);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .custom-actions .save-custom {
+      border-color: var(--seal);
+      background: var(--seal);
+      color: var(--paper);
+    }
+
+    .custom-actions .restore-custom { margin-right: auto; }
+    body.modal-open { overflow: hidden; }
+
     .site-footer {
       padding: var(--space-4) max(var(--space-5), calc((100vw - 1280px) / 2));
       border-top: 1px solid var(--line);
@@ -956,7 +1118,10 @@
       .filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .filters select { min-width: 0; width: 100%; padding: 0 var(--space-2); font-size: 12px; }
       #categorySelect { min-width: 0; }
-      .session-status { margin-top: var(--space-3); white-space: normal; }
+      .session-tools { justify-content: space-between; margin-top: var(--space-3); }
+      .session-status { white-space: normal; }
+      .edit-label-full { display: none; }
+      .edit-label-compact { display: inline; }
       .mobile-category-panel { display: block; margin-bottom: var(--space-4); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
       .mobile-category-panel summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); color: var(--ink); font-size: 13px; font-weight: 600; list-style: none; }
       .mobile-category-panel summary::-webkit-details-marker { display: none; }
@@ -992,6 +1157,10 @@
       .action-button { min-width: 0; min-height: 48px; padding: 0 var(--space-1); font-size: 12px; }
       .action-label-full { display: none; }
       .action-label-compact { display: inline; }
+      .custom-dialog { padding: var(--space-5); }
+      .custom-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .custom-actions button { width: 100%; }
+      .custom-actions .restore-custom { grid-column: 1 / -1; grid-row: 2; margin-right: 0; }
       .site-footer { padding: var(--space-4); }
     }
 
@@ -1108,7 +1277,12 @@
                 <option value="">全部分类</option>
               </select>
             </div>
-            <div class="session-status" id="sessionStatus">正在载入题库</div>
+            <div class="session-tools">
+              <button class="edit-answer-button" id="editAnswerBtn" type="button" disabled>
+                <span class="edit-label-full">修改本题答案</span><span class="edit-label-compact">修改答案</span>
+              </button>
+              <div class="session-status" id="sessionStatus">正在载入题库</div>
+            </div>
           </div>
 
           <details class="mobile-category-panel">
@@ -1164,6 +1338,21 @@
     <footer class="site-footer"><div id="sourceSummary">正在载入资料说明。</div></footer>
   </div>
 
+  <div class="custom-modal" id="customModal" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" hidden>
+    <section class="custom-dialog" tabindex="-1">
+      <h2 id="customModalTitle">修改本题答案</h2>
+      <p class="custom-help" id="customModalHelp">修改只保存在当前浏览器，不会改动题库原文。</p>
+      <label class="custom-field-label" id="customFieldLabel" for="customText">答案内容</label>
+      <textarea id="customText" aria-describedby="customModalHelp customMessage" placeholder="输入你要使用的答案"></textarea>
+      <div class="custom-message" id="customMessage" role="status" aria-live="polite"></div>
+      <div class="custom-actions">
+        <button class="restore-custom" id="restoreAnswerBtn" type="button">恢复题库原文</button>
+        <button id="customCancelBtn" type="button">关闭</button>
+        <button class="save-custom" id="customSaveBtn" type="button">保存修改</button>
+      </div>
+    </section>
+  </div>
+
   <script>
     let items = [];
     let extractionReport = {counts: {}, sources: []};
@@ -1174,6 +1363,7 @@
     let activeCategory = "";
     let current = null;
     let revealed = false;
+    let customDialogReturnFocus = null;
 
     const $ = (id) => document.getElementById(id);
     const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
@@ -1199,6 +1389,24 @@
       catch { /* 浏览器禁止本地存储时仍允许继续抽背。 */ }
     };
 
+    const customAnswersKey = `${storagePrefix}:custom-answers`;
+    const loadCustomAnswers = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(customAnswersKey) || "{}");
+        return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+      } catch {
+        return {};
+      }
+    };
+    let customAnswers = loadCustomAnswers();
+    const saveCustomAnswers = () => {
+      try { localStorage.setItem(customAnswersKey, JSON.stringify(customAnswers)); }
+      catch { /* 浏览器禁止本地存储时，本次页面仍可继续使用修改。 */ }
+    };
+    const defaultAnswerFor = (item) => item?.primaryAnswer || "见附加信息";
+    const hasCustomAnswer = (item) => Boolean(item?.id && customAnswers[item.id]);
+    const directAnswerFor = (item) => hasCustomAnswer(item) ? customAnswers[item.id] : defaultAnswerFor(item);
+
     const currentItems = () => items.filter(item => item.subject === activeSubject && item.module === activeModule);
     const filteredItems = () => {
       const state = loadState();
@@ -1209,8 +1417,10 @@
       return pool;
     };
     const modulesForSubject = (subject) => [...new Set(items.filter(item => item.subject === subject).map(item => item.module))];
-    const promptFor = (item) => $("modeSelect").value === "reverse" ? (item.reversePrompt || item.primaryAnswer || item.name) : item.name;
-    const answerFor = (item) => $("modeSelect").value === "reverse" ? item.name : (item.primaryAnswer || "见附加信息");
+    const promptFor = (item) => $("modeSelect").value === "reverse"
+      ? (hasCustomAnswer(item) ? directAnswerFor(item) : item.reversePrompt || defaultAnswerFor(item) || item.name)
+      : item.name;
+    const answerFor = (item) => $("modeSelect").value === "reverse" ? item.name : directAnswerFor(item);
     const promptLabelFor = () => $("modeSelect").value === "reverse" ? "根据提示回忆名称" : `请回忆这${activeSubject === "中药" ? "味药" : activeSubject === "方剂" ? "首方" : "项内容"}的${activeModule === "功效" ? "功效" : activeModule}`;
 
     const renderSubjectTabs = () => {
@@ -1328,11 +1538,12 @@
         return;
       }
       const answer = answerFor(current);
-      const extras = Object.entries(current.extra || {}).filter(([, value]) => value && value !== answer);
+      const extras = Object.entries(current.extra || {}).filter(([key, value]) => value && value !== answer && key !== "功效来源");
+      const customBadge = hasCustomAnswer(current) ? `<span class="custom-answer-badge">我的版本</span>` : "";
       box.className = "answer-block";
       box.innerHTML = `
         <div class="answer-grid">
-          <p class="answer-label">${escapeHtml($("modeSelect").value === "reverse" ? "答案" : current.primaryLabel || "答案")}</p>
+          <p class="answer-label"><span>${escapeHtml($("modeSelect").value === "reverse" ? "答案" : current.primaryLabel || "答案")}</span>${customBadge}</p>
           <div>
             <p class="answer-main">${escapeHtml(answer)}</p>
             <div class="answer-extra">${extras.map(([key, value]) => `<div class="field"><strong>${escapeHtml(key)}</strong><span>${escapeHtml(value)}</span></div>`).join("")}</div>
@@ -1350,11 +1561,67 @@
     const updateActionAvailability = () => {
       const available = Boolean(current);
       ["revealBtn", "knowBtn", "againBtn", "favoriteBtn", "nextBtn"].forEach(id => { $(id).disabled = !available; });
+      $("editAnswerBtn").disabled = !available;
       $("revealBtn").disabled = !available || revealed;
       setActionLabel("revealBtn", revealed ? "答案已展开" : "看答案", revealed ? "已展开" : "答案");
       const favorite = available && loadState().favorite.includes(current.id);
       setActionLabel("favoriteBtn", favorite ? "已收藏" : "收藏", favorite ? "已收藏" : "收藏");
       $("favoriteBtn").setAttribute("aria-pressed", String(favorite));
+      const editLabel = available ? `修改${current.primaryLabel || "答案"}` : "修改本题答案";
+      $("editAnswerBtn").querySelector(".edit-label-full").textContent = editLabel;
+      $("editAnswerBtn").classList.toggle("is-custom", available && hasCustomAnswer(current));
+      $("editAnswerBtn").setAttribute("aria-label", available ? `${editLabel}：${current.name}` : editLabel);
+    };
+
+    const refreshCurrentAnswer = () => {
+      if (!current) return;
+      $("promptName").textContent = promptFor(current);
+      renderAnswer();
+      updateActionAvailability();
+    };
+
+    const openCustomModal = () => {
+      if (!current) return;
+      const label = current.primaryLabel || "答案";
+      customDialogReturnFocus = document.activeElement;
+      $("customModalTitle").textContent = `修改${label}：${current.name}`;
+      $("customFieldLabel").textContent = `${label}内容`;
+      $("customModalHelp").textContent = "修改只保存在当前浏览器，正向和反向测试都会使用你的版本，不会改动题库原文。";
+      $("customText").value = directAnswerFor(current);
+      $("customMessage").textContent = hasCustomAnswer(current) ? "当前正在使用你的自定义版本。" : "";
+      $("restoreAnswerBtn").disabled = !hasCustomAnswer(current);
+      $("customModal").hidden = false;
+      document.body.classList.add("modal-open");
+      window.setTimeout(() => $("customText").focus(), 0);
+    };
+
+    const closeCustomModal = () => {
+      $("customModal").hidden = true;
+      document.body.classList.remove("modal-open");
+      if (customDialogReturnFocus?.focus) customDialogReturnFocus.focus();
+    };
+
+    const saveCustomAnswer = () => {
+      if (!current) return;
+      const value = $("customText").value.trim();
+      if (!value) {
+        $("customMessage").textContent = "答案不能为空。";
+        $("customText").focus();
+        return;
+      }
+      if (value === defaultAnswerFor(current)) delete customAnswers[current.id];
+      else customAnswers[current.id] = value;
+      saveCustomAnswers();
+      closeCustomModal();
+      refreshCurrentAnswer();
+    };
+
+    const restoreDefaultAnswer = () => {
+      if (!current || !hasCustomAnswer(current)) return;
+      delete customAnswers[current.id];
+      saveCustomAnswers();
+      closeCustomModal();
+      refreshCurrentAnswer();
     };
 
     const pick = (preferredId = "") => {
@@ -1436,7 +1703,7 @@
       }
       const scope = $("searchScope").value;
       const base = scope === "all" ? items : items.filter(item => item.subject === activeSubject);
-      const hits = base.filter(item => JSON.stringify(item).toLowerCase().includes(query)).slice(0, 50);
+      const hits = base.filter(item => `${JSON.stringify(item)} ${directAnswerFor(item)}`.toLowerCase().includes(query)).slice(0, 50);
       const scopeText = scope === "all" ? "全部科目" : activeSubject;
       $("searchNote").textContent = hits.length ? `${scopeText}找到 ${hits.length} 条结果，点击即可切换到对应题目。` : `${scopeText}没有找到“${$("searchInput").value.trim()}”。`;
       $("results").innerHTML = hits.map(item => `
@@ -1505,6 +1772,12 @@
     $("poolSelect").addEventListener("change", () => pick());
     $("categorySelect").addEventListener("change", () => { activeCategory = $("categorySelect").value; $("poolSelect").value = "all"; pick(); renderStats(); });
     $("searchToggleBtn").addEventListener("click", () => toggleSearch());
+    $("editAnswerBtn").addEventListener("click", openCustomModal);
+    $("customSaveBtn").addEventListener("click", saveCustomAnswer);
+    $("restoreAnswerBtn").addEventListener("click", restoreDefaultAnswer);
+    $("customCancelBtn").addEventListener("click", closeCustomModal);
+    $("customModal").addEventListener("click", event => { if (event.target === $("customModal")) closeCustomModal(); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape" && !$("customModal").hidden) closeCustomModal(); });
     $("revealBtn").addEventListener("click", () => { revealed = true; renderAnswer(); updateActionAvailability(); });
     $("knowBtn").addEventListener("click", () => mark("know"));
     $("againBtn").addEventListener("click", () => mark("again"));
