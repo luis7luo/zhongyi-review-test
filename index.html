@@ -3,223 +3,1163 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>中医多科随机复习测试站</title>
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#DFE4DB">
+  <title>中医三科复习完整版</title>
   <style>
     :root {
       color-scheme: light;
-      --ink: #17211d;
-      --muted: #68736d;
-      --line: #dce4df;
-      --paper: #f7f3ea;
-      --panel: #ffffff;
-      --accent: #226b56;
-      --accent-deep: #154839;
-      --accent-2: #a6422b;
-      --soft: #edf5ef;
-      --wash: #fbfaf6;
-      --gold: #b78941;
-      --blue: #315f7d;
+      --chrome: #dfe4db;
+      --paper: #f8f4e9;
+      --paper-deep: #f0ece1;
+      --ink: #252824;
+      --muted-ink: #686d66;
+      --seal: #a45145;
+      --line: #d8d4c7;
+      --ledger: #2d3b34;
+      --ledger-line: #607068;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --space-7: 48px;
+      --topbar-height: 72px;
+      --sidebar-width: 280px;
+      --ui-font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      --formal-font: "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", serif;
+      --ease: 180ms cubic-bezier(.2, .7, .2, 1);
     }
+
     * { box-sizing: border-box; }
-    html { background: var(--paper); }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: linear-gradient(180deg, rgba(34,107,86,.12), rgba(247,243,234,0) 280px), var(--paper);
+    [hidden] { display: none !important; }
+
+    html {
+      min-width: 320px;
+      background: var(--chrome);
       color: var(--ink);
+      font-family: var(--ui-font);
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      background: var(--chrome);
       -webkit-font-smoothing: antialiased;
     }
-    body::before {
-      content: "";
+
+    button,
+    select,
+    input { font: inherit; }
+
+    button,
+    select,
+    input,
+    summary { min-height: 44px; }
+
+    button,
+    summary { cursor: pointer; touch-action: manipulation; }
+
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible,
+    summary:focus-visible {
+      outline: 2px solid var(--seal);
+      outline-offset: 2px;
+    }
+
+    button:disabled { cursor: default; opacity: .46; }
+
+    .skip-link {
       position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image: linear-gradient(rgba(23,33,29,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(23,33,29,.03) 1px, transparent 1px);
-      background-size: 28px 28px;
-      mask-image: linear-gradient(180deg, rgba(0,0,0,.55), transparent 52%);
+      z-index: 30;
+      top: var(--space-2);
+      left: var(--space-2);
+      padding: var(--space-3) var(--space-4);
+      background: var(--ledger);
+      color: var(--paper);
+      transform: translateY(-150%);
+      transition: transform var(--ease);
     }
-    header, .stage, footer {
-      max-width: 1180px;
-      width: 100%;
-      margin: 0 auto;
-      padding-left: clamp(16px, 3vw, 28px);
-      padding-right: clamp(16px, 3vw, 28px);
-      position: relative;
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .app {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: var(--paper);
     }
-    header { padding-top: 18px; padding-bottom: 12px; }
-    .topline, .tabs, .toolbar, .actions, .answer-head, .search-row {
+
+    .topbar {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr) auto;
+      align-items: center;
+      min-height: var(--topbar-height);
+      border-bottom: 1px solid var(--line);
+      background: var(--chrome);
+    }
+
+    .brand {
+      align-self: stretch;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--space-3);
+      min-width: 0;
+      padding: 0 var(--space-5);
+      border-right: 1px solid var(--line);
     }
-    .topline { justify-content: space-between; margin-bottom: 16px; }
-    .brand { display: inline-flex; align-items: center; gap: 9px; min-width: 0; color: var(--accent-deep); font-weight: 850; }
-    .brand-mark { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid rgba(34,107,86,.22); border-radius: 8px; background: #fffdf8; color: var(--accent); box-shadow: 0 8px 20px rgba(25,72,58,.08); }
-    .badge { flex: 0 0 auto; display: inline-flex; min-height: 30px; align-items: center; padding: 0 10px; border: 1px solid rgba(183,137,65,.38); border-radius: 999px; background: rgba(255,250,238,.86); color: #775323; font-size: 13px; font-weight: 750; }
-    h1 { margin: 0; max-width: 790px; font-size: clamp(28px, 5.5vw, 54px); line-height: 1.05; letter-spacing: 0; }
-    .sub { max-width: 760px; margin: 12px 0 0; color: var(--muted); line-height: 1.62; font-size: clamp(15px, 2vw, 17px); }
-    .tabs { flex-wrap: wrap; margin-top: 18px; }
-    button, select, input {
-      font: inherit;
-      min-height: 42px;
+
+    .brand-mark {
+      width: 3px;
+      height: 32px;
+      flex: 0 0 auto;
+      background: var(--seal);
+    }
+
+    .brand-name {
+      margin: 0;
+      overflow: hidden;
+      font-family: var(--formal-font);
+      font-size: 21px;
+      font-weight: 600;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .edition-context {
+      min-width: 0;
+      padding: 0 var(--space-6);
+      color: var(--muted-ink);
+      font-size: 13px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding-right: var(--space-5);
+    }
+
+    .edition-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 var(--space-3);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
+      color: var(--muted-ink);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .top-search-button {
+      min-width: 92px;
+      padding: 0 var(--space-4);
+      border: 1px solid var(--ledger);
+      border-radius: 4px;
+      background: var(--ledger);
+      color: var(--paper);
+      font-size: 13px;
+      font-weight: 600;
+      transition: background-color var(--ease), border-color var(--ease);
+    }
+
+    .top-search-button:hover,
+    .top-search-button[aria-expanded="true"] {
+      border-color: var(--seal);
+      background: var(--seal);
+    }
+
+    .mobile-subjects { display: none; }
+
+    .app-body {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+      min-width: 0;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: var(--topbar-height);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - var(--topbar-height));
+      height: calc(100dvh - var(--topbar-height));
+      min-height: 0;
+      padding: var(--space-5);
+      background: var(--ledger);
+      color: var(--paper);
+      overflow: hidden;
+    }
+
+    .side-kicker,
+    .side-label {
+      margin: 0 0 var(--space-3);
+      color: var(--paper);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: .12em;
+      opacity: .62;
+    }
+
+    .subject-nav {
+      display: grid;
+      gap: var(--space-2);
+      margin-bottom: var(--space-5);
+    }
+
+    .subject-button {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--space-2);
+      width: 100%;
+      min-height: 48px;
+      padding: 0 var(--space-3);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--paper);
+      text-align: left;
+      transition: border-color var(--ease), background-color var(--ease);
+    }
+
+    .subject-button:hover { border-color: var(--ledger-line); }
+
+    .subject-button[aria-selected="true"] {
+      border-color: var(--seal);
+      background: var(--ink);
+    }
+
+    .subject-number,
+    .subject-count { font-size: 11px; opacity: .62; }
+
+    .subject-name {
+      overflow: hidden;
+      font-family: var(--formal-font);
+      font-size: 17px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .current-chapter {
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--ledger-line);
+    }
+
+    .chapter-number {
+      display: block;
+      margin-bottom: var(--space-2);
+      color: #c46456;
+      font-family: var(--formal-font);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .chapter-name {
+      margin: 0;
+      font-family: var(--formal-font);
+      font-size: 19px;
+      font-weight: 500;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .chapter-ratio {
+      margin: var(--space-2) 0 0;
+      color: var(--paper);
+      font-size: 12px;
+      opacity: .66;
+    }
+
+    .category-section {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+      margin-top: var(--space-5);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--ledger-line);
+    }
+
+    .category-list {
+      display: grid;
+      gap: var(--space-1);
+      min-height: 0;
+      overflow: auto;
+      scrollbar-width: thin;
+    }
+
+    .cat {
+      width: 100%;
+      min-height: 44px;
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--paper);
+      text-align: left;
+      transition: border-color var(--ease), background-color var(--ease);
+    }
+
+    .cat:hover { border-color: var(--ledger-line); }
+
+    .cat.active {
+      border-color: var(--seal);
+      background: var(--ink);
+    }
+
+    .cat-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+      font-size: 12px;
+    }
+
+    .cat-name {
+      overflow: hidden;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .progress {
+      height: 3px;
+      margin-top: var(--space-2);
+      background: var(--ledger-line);
+      overflow: hidden;
+    }
+
+    .bar { height: 100%; background: var(--seal); }
+
+    .side-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--ledger-line);
+    }
+
+    .side-stat { min-width: 0; }
+
+    .side-stat strong {
+      display: block;
+      color: var(--paper);
+      font-family: var(--formal-font);
+      font-size: 18px;
+      font-weight: 500;
+      line-height: 1.1;
+    }
+
+    .side-stat span {
+      display: block;
+      margin-top: var(--space-1);
+      color: var(--paper);
+      font-size: 10px;
+      opacity: .58;
+    }
+
+    .workspace { min-width: 0; background: var(--paper); }
+
+    .chapter-band {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr) 210px;
+      align-items: center;
+      min-height: 112px;
+      padding: var(--space-4) var(--space-7);
+      background: var(--ledger);
+      color: var(--paper);
+    }
+
+    .position {
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 1px solid var(--ledger-line);
+    }
+
+    .position-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      opacity: .62;
+    }
+
+    .position-value {
+      margin-top: var(--space-1);
+      font-family: var(--formal-font);
+      font-size: 26px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .position-value span { font-size: 13px; opacity: .6; }
+
+    .band-progress {
+      min-width: 0;
+      padding: 0 var(--space-6);
+    }
+
+    .band-copy {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-3);
+    }
+
+    .band-copy strong {
+      overflow: hidden;
+      font-family: var(--formal-font);
+      font-size: 17px;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .band-copy span {
+      flex: 0 0 auto;
+      font-size: 11px;
+      opacity: .64;
+    }
+
+    .band-track {
+      height: 8px;
+      background: var(--ledger-line);
+      overflow: hidden;
+    }
+
+    .band-track-fill {
+      width: 0;
+      height: 100%;
+      background: var(--seal);
+      transition: width var(--ease);
+    }
+
+    .band-state {
+      align-self: stretch;
+      display: grid;
+      align-content: center;
+      gap: var(--space-2);
+      padding-left: var(--space-6);
+      border-left: 1px solid var(--ledger-line);
+      font-size: 12px;
+    }
+
+    .band-state strong { font-size: 14px; font-weight: 600; }
+
+    .search-panel {
+      padding: var(--space-4) var(--space-7) var(--space-5);
+      border-bottom: 1px solid var(--line);
+      background: var(--chrome);
+    }
+
+    .search-form {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 144px 88px 72px;
+      gap: var(--space-2);
+      max-width: 980px;
+    }
+
+    .search-form input,
+    .search-form select {
+      min-width: 0;
+      padding: 0 var(--space-3);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--paper);
       color: var(--ink);
     }
-    button { padding: 0 14px; font-weight: 750; cursor: pointer; }
-    button.primary, .tab.active { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff; }
-    button.ghost { background: rgba(255,255,255,.7); }
-    button.icon { width: 42px; padding: 0; display: grid; place-items: center; }
-    button:disabled { opacity: .55; cursor: default; }
-    .tab { min-width: 86px; }
-    .stage { padding-top: 10px; padding-bottom: 28px; display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px; align-items: start; }
-    .quiz, .side, .search-panel {
-      background: var(--panel);
+
+    .search-form button {
+      padding: 0 var(--space-3);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 18px 46px rgba(36,46,39,.10);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 600;
     }
-    .quiz { min-height: 560px; padding: clamp(20px, 4vw, 38px); display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; }
-    .quiz::before { content: ""; position: absolute; inset: 0 0 auto; height: 5px; background: linear-gradient(90deg, var(--accent), var(--gold), var(--blue)); }
-    .toolbar { flex-wrap: wrap; justify-content: space-between; }
-    .filters { display: flex; flex-wrap: wrap; gap: 8px; }
-    select, input { padding: 0 12px; max-width: 100%; }
-    .label { color: var(--muted); font-size: 14px; font-weight: 800; }
-    .prompt-name { margin: 10px 0 12px; font-size: clamp(42px, 9.5vw, 88px); line-height: 1.05; font-weight: 850; letter-spacing: 0; overflow-wrap: anywhere; }
-    .prompt-name.reverse { font-size: clamp(24px, 5vw, 42px); line-height: 1.38; }
-    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { display: inline-flex; align-items: center; min-height: 30px; padding: 0 10px; border-radius: 999px; background: var(--soft); color: #315b50; font-size: 13px; font-weight: 750; }
-    .answer { min-height: 178px; border: 1px solid var(--line); border-radius: 8px; padding: clamp(16px, 3vw, 24px); background: var(--wash); line-height: 1.55; }
-    .answer.hidden { display: flex; align-items: center; color: var(--muted); font-size: 17px; }
-    .answer-main { white-space: pre-wrap; font-size: clamp(20px, 3vw, 30px); line-height: 1.45; font-weight: 850; }
-    .answer-extra { margin-top: 16px; display: grid; gap: 10px; }
-    .field { padding-top: 10px; border-top: 1px dashed #d8ddd6; }
-    .field strong { display: block; margin-bottom: 4px; color: var(--accent-deep); font-size: 14px; }
-    .field span { white-space: pre-wrap; color: #34413b; line-height: 1.58; }
-    .actions { flex-wrap: wrap; gap: 8px; }
-    .actions button { flex: 1 1 132px; }
-    .side { padding: 16px; display: grid; gap: 16px; }
-    .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .metric { border: 1px solid var(--line); border-radius: 8px; background: var(--wash); padding: 10px; min-width: 0; }
-    .metric b { display: block; font-size: 22px; color: var(--accent-deep); }
-    .metric span { color: var(--muted); font-size: 12px; }
-    .category-list, .results { display: grid; gap: 8px; max-height: 320px; overflow: auto; padding-right: 2px; }
-    .cat, .result { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 10px; cursor: pointer; }
-    .cat.active { border-color: rgba(34,107,86,.55); background: var(--soft); }
-    .cat-row, .result-row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-    .cat-name, .result-name { font-weight: 800; overflow-wrap: anywhere; }
-    .progress { height: 7px; border-radius: 999px; background: #e9eee9; overflow: hidden; margin-top: 8px; }
-    .bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--gold)); }
-    .search-panel { margin-top: 18px; padding: 16px; }
-    .search-row { align-items: stretch; }
-    .search-row input { flex: 1 1 auto; min-width: 0; }
-    .search-row select { flex: 0 0 126px; }
-    .search-note { min-height: 22px; color: var(--muted); font-size: 13px; margin-top: 8px; }
-    footer { padding-top: 0; padding-bottom: 24px; color: var(--muted); font-size: 13px; line-height: 1.55; }
-    .empty { color: var(--muted); line-height: 1.6; padding: 10px 0; }
-    @media (max-width: 860px) {
-      .stage { grid-template-columns: 1fr; }
-      .side { order: -1; }
-      .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .search-form .search-submit {
+      border-color: var(--ledger);
+      background: var(--ledger);
+      color: var(--paper);
     }
-    @media (max-width: 560px) {
-      .topline { align-items: flex-start; }
-      .brand-name { display: none; }
-      .tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .tab { min-width: 0; padding: 0 8px; }
-      .toolbar { align-items: stretch; }
-      .filters, .filters select { width: 100%; }
-      .filters select { flex: 1 1 100%; }
-      .actions { display: grid; grid-template-columns: 1fr 1fr; }
-      .actions button { min-width: 0; flex: none; }
-      .actions button.primary { grid-column: span 2; }
-      .search-row { display: grid; grid-template-columns: 1fr 1fr; }
-      .search-row input { grid-column: 1 / -1; }
-      .search-row select, .search-row button { width: 100%; min-width: 0; }
+
+    .search-note {
+      min-height: 22px;
+      margin-top: var(--space-2);
+      color: var(--muted-ink);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-2);
+      max-height: 236px;
+      margin-top: var(--space-2);
+      overflow: auto;
+    }
+
+    .result {
+      min-width: 0;
+      min-height: 58px;
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--paper);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .result:hover { border-color: var(--seal); }
+
+    .result-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .result-name {
+      min-width: 0;
+      overflow: hidden;
+      font-family: var(--formal-font);
+      font-size: 16px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .result-type {
+      flex: 0 0 auto;
+      color: var(--seal);
+      font-size: 11px;
+    }
+
+    .result-category {
+      display: block;
+      margin-top: var(--space-1);
+      overflow: hidden;
+      color: var(--muted-ink);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .study {
+      min-width: 0;
+      padding: var(--space-5) var(--space-7) var(--space-6);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      min-height: 48px;
+      margin-bottom: var(--space-4);
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .filters select,
+    .reset-filter {
+      min-width: 116px;
+      padding: 0 var(--space-3);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .reset-filter { min-width: 96px; font-weight: 600; }
+    .session-status { color: var(--muted-ink); font-size: 12px; white-space: nowrap; }
+
+    .mobile-category-panel { display: none; }
+
+    .question-layout {
+      display: grid;
+      grid-template-columns: 64px minmax(420px, 820px) minmax(200px, 1fr);
+      grid-template-rows: minmax(248px, auto) auto;
+      column-gap: var(--space-7);
+      width: 100%;
+      max-width: 1220px;
+      min-height: 440px;
+      margin: 0 auto;
+    }
+
+    .recall-rail,
+    .answer-rail {
+      position: relative;
+      grid-column: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .recall-rail { grid-row: 1; }
+    .answer-rail { grid-row: 2; }
+
+    .recall-rail::after,
+    .answer-rail::before,
+    .answer-rail::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-50%);
+    }
+
+    .recall-rail::after { top: 48px; bottom: 0; background: var(--seal); }
+    .answer-rail::before { top: 0; height: 16px; background: var(--seal); }
+    .answer-rail::after { top: 64px; bottom: 0; background: var(--line); }
+
+    .rail-position,
+    .rail-answer {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      flex: 0 0 auto;
+      font-family: var(--formal-font);
+    }
+
+    .rail-position {
+      border: 1px solid var(--seal);
+      background: var(--paper);
+      color: var(--seal);
+      font-size: 17px;
+    }
+
+    .rail-answer {
+      margin-top: 16px;
+      border: 1px solid var(--seal);
+      background: var(--paper);
+      color: var(--seal);
+      font-size: 15px;
+      transition: background-color var(--ease), color var(--ease);
+    }
+
+    .rail-answer.revealed { background: var(--seal); color: var(--paper); }
+
+    .question-head {
+      grid-column: 2;
+      grid-row: 1;
+      min-width: 0;
+      padding: var(--space-5) 0 var(--space-6);
+    }
+
+    .prompt-label {
+      margin: 0 0 var(--space-6);
+      color: var(--muted-ink);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .prompt-name {
+      margin: 0;
+      font-family: var(--formal-font);
+      font-size: clamp(50px, 5.2vw, 78px);
+      font-weight: 500;
+      line-height: 1.18;
+      overflow-wrap: anywhere;
+    }
+
+    .prompt-name.reverse {
+      max-width: 900px;
+      font-size: clamp(25px, 2.8vw, 38px);
+      line-height: 1.52;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2) var(--space-4);
+      margin-top: var(--space-6);
+      color: var(--muted-ink);
+      font-size: 12px;
+    }
+
+    .chip { position: relative; padding-left: var(--space-3); }
+
+    .chip::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 4px;
+      height: 4px;
+      background: var(--muted-ink);
+      transform: translateY(-50%);
+    }
+
+    .answer-block {
+      grid-column: 2;
+      grid-row: 2;
+      min-width: 0;
+      padding: var(--space-6) 0;
+      border-top: 1px solid var(--ink);
+    }
+
+    .answer-block.is-hidden { border-top-style: dashed; }
+
+    .answer-placeholder {
+      margin: 0;
+      color: var(--muted-ink);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+
+    .answer-label {
+      margin: var(--space-1) 0 0;
+      color: var(--seal);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+    }
+
+    .answer-main {
+      margin: 0;
+      white-space: pre-wrap;
+      font-family: var(--formal-font);
+      font-size: clamp(24px, 2.25vw, 34px);
+      font-weight: 500;
+      line-height: 1.62;
+      overflow-wrap: anywhere;
+    }
+
+    .answer-extra {
+      display: grid;
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: var(--space-5);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--line);
+    }
+
+    .field strong {
+      color: var(--muted-ink);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .field span {
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.72;
+      overflow-wrap: anywhere;
+    }
+
+    .question-context {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+      align-self: stretch;
+      min-width: 0;
+      padding: var(--space-5) 0 var(--space-5) var(--space-6);
+      border-left: 1px solid var(--line);
+    }
+
+    .context-block + .context-block {
+      margin-top: var(--space-7);
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--line);
+    }
+
+    .context-heading {
+      margin: 0 0 var(--space-3);
+      color: var(--muted-ink);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+    }
+
+    .context-value {
+      margin: 0;
+      font-family: var(--formal-font);
+      font-size: 18px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .context-detail {
+      margin: var(--space-2) 0 0;
+      color: var(--muted-ink);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .mini-progress {
+      height: 4px;
+      margin-top: var(--space-4);
+      background: var(--line);
+      overflow: hidden;
+    }
+
+    .mini-progress-fill { width: 0; height: 100%; background: var(--ink); }
+
+    .actions {
+      position: sticky;
+      z-index: 10;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(96px, 132px)) minmax(180px, 240px);
+      align-items: center;
+      justify-content: end;
+      gap: var(--space-2);
+      padding: var(--space-4) var(--space-7);
+      border-top: 1px solid var(--line);
+      background: var(--chrome);
+    }
+
+    .action-button {
+      min-height: 48px;
+      padding: 0 var(--space-4);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      transition: border-color var(--ease), background-color var(--ease), color var(--ease);
+    }
+
+    .action-button:hover:not(:disabled) { border-color: var(--muted-ink); }
+    .action-button:active:not(:disabled) { background: var(--line); }
+    .action-button.emphasis { border-color: var(--seal); color: var(--seal); }
+
+    .action-button.primary {
+      border-color: var(--seal);
+      background: var(--seal);
+      color: var(--paper);
+    }
+
+    .action-button.secondary-primary {
+      border-color: var(--ledger);
+      background: var(--ledger);
+      color: var(--paper);
+    }
+
+    .site-footer {
+      padding: var(--space-4) max(var(--space-5), calc((100vw - 1280px) / 2));
+      border-top: 1px solid var(--line);
+      background: var(--paper-deep);
+      color: var(--muted-ink);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .empty { color: var(--muted-ink); font-size: 12px; line-height: 1.6; padding: var(--space-3); }
+
+    @media (max-width: 1120px) {
+      :root { --sidebar-width: 224px; }
+      .chapter-band { grid-template-columns: 88px minmax(0, 1fr); padding: var(--space-4) var(--space-5); }
+      .band-state { display: none; }
+      .band-progress { padding-right: 0; }
+      .study { padding-right: var(--space-5); padding-left: var(--space-5); }
+      .question-layout { grid-template-columns: 56px minmax(0, 1fr); grid-template-rows: minmax(232px, auto) auto auto; column-gap: var(--space-5); }
+      .question-context {
+        grid-column: 2;
+        grid-row: 3;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-5);
+        margin-top: var(--space-3);
+        padding: var(--space-5) 0 0;
+        border-top: 1px solid var(--line);
+        border-left: 0;
+      }
+      .context-block + .context-block { margin: 0; padding: 0 0 0 var(--space-5); border-top: 0; border-left: 1px solid var(--line); }
+      .actions { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: var(--space-3) var(--space-5); }
+      .search-panel { padding-right: var(--space-5); padding-left: var(--space-5); }
+    }
+
+    @media (max-width: 800px) {
+      :root { --topbar-height: 112px; }
+      .topbar { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 64px 48px; }
+      .brand { padding: 0 var(--space-4); border-right: 0; }
+      .brand-mark { height: 28px; }
+      .brand-name { font-size: 19px; }
+      .edition-context { display: none; }
+      .top-actions { padding-right: var(--space-4); }
+      .edition-badge { display: none; }
+      .top-search-button { min-width: 72px; padding: 0 var(--space-3); }
+      .mobile-subjects {
+        grid-column: 1 / -1;
+        align-self: stretch;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        padding: 0 var(--space-4);
+        border-top: 1px solid var(--line);
+      }
+      .mobile-subjects button {
+        min-width: 0;
+        min-height: 47px;
+        padding: 0 var(--space-2);
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        color: var(--muted-ink);
+        font-family: var(--formal-font);
+        font-size: 15px;
+      }
+      .mobile-subjects button[aria-selected="true"] { border-bottom-color: var(--seal); color: var(--ink); }
+      .app-body { display: block; }
+      .sidebar { display: none; }
+      .chapter-band { grid-template-columns: 64px minmax(0, 1fr); min-height: 80px; padding: var(--space-3) var(--space-4); }
+      .position-value { font-size: 22px; }
+      .band-progress { padding-left: var(--space-4); }
+      .band-copy { margin-bottom: var(--space-2); }
+      .band-copy strong { font-size: 14px; }
+      .search-panel { padding: var(--space-3) var(--space-4) var(--space-4); }
+      .search-form { grid-template-columns: minmax(0, 1fr) 120px; }
+      .search-form input { grid-column: 1 / -1; }
+      .search-form button { width: 100%; }
+      .results { grid-template-columns: 1fr; max-height: 280px; }
+      .study { padding: var(--space-3) var(--space-4) var(--space-5); }
+      .toolbar { display: block; min-height: 0; margin-bottom: var(--space-3); }
+      .filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .filters select { min-width: 0; width: 100%; padding: 0 var(--space-2); font-size: 12px; }
+      .reset-filter { grid-column: 1 / -1; width: 100%; }
+      .session-status { margin-top: var(--space-3); white-space: normal; }
+      .mobile-category-panel { display: block; margin-bottom: var(--space-4); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .mobile-category-panel summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); color: var(--ink); font-size: 13px; font-weight: 600; list-style: none; }
+      .mobile-category-panel summary::-webkit-details-marker { display: none; }
+      .mobile-category-count { color: var(--muted-ink); font-size: 11px; font-weight: 400; }
+      .mobile-category-panel .category-list { max-height: 320px; padding: var(--space-2) 0 var(--space-3); }
+      .mobile-category-panel .cat { border-color: var(--line); color: var(--ink); }
+      .mobile-category-panel .cat.active { border-color: var(--seal); background: var(--paper-deep); }
+      .mobile-category-panel .progress { background: var(--line); }
+      .question-layout { grid-template-columns: 40px minmax(0, 1fr); grid-template-rows: minmax(202px, auto) auto auto; column-gap: var(--space-4); min-height: 0; }
+      .rail-position, .rail-answer { width: 40px; height: 40px; }
+      .recall-rail::after { top: 40px; }
+      .answer-rail::before { height: 12px; }
+      .answer-rail::after { top: 52px; }
+      .rail-answer { margin-top: 12px; }
+      .question-head { padding: var(--space-4) 0 var(--space-5); }
+      .prompt-label { margin-bottom: var(--space-5); font-size: 13px; }
+      .prompt-name { font-size: clamp(40px, 14vw, 56px); }
+      .prompt-name.reverse { font-size: clamp(22px, 6.4vw, 30px); line-height: 1.55; }
+      .chips { margin-top: var(--space-5); }
+      .answer-block { padding: var(--space-5) 0; }
+      .answer-grid { display: block; }
+      .answer-label { margin-bottom: var(--space-3); }
+      .answer-main { font-size: clamp(23px, 7.2vw, 29px); line-height: 1.58; }
+      .field { display: block; }
+      .field strong { display: block; margin-bottom: var(--space-2); }
+      .question-context { grid-template-columns: 1fr; gap: var(--space-4); margin-top: 0; padding-top: var(--space-4); }
+      .context-block + .context-block { padding: var(--space-4) 0 0; border-top: 1px solid var(--line); border-left: 0; }
+      .actions {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-4) max(var(--space-2), env(safe-area-inset-bottom));
+      }
+      .action-button { min-width: 0; min-height: 44px; padding: 0 var(--space-1); font-size: 12px; }
+      #revealBtn, #nextBtn { grid-column: span 3; min-height: 48px; }
+      #knowBtn, #againBtn, #favoriteBtn { grid-column: span 2; }
+      .site-footer { padding: var(--space-4); }
+    }
+
+    @media (max-width: 359px) {
+      .brand { padding-right: var(--space-2); }
+      .brand-name { font-size: 17px; }
+      .top-actions { padding-right: var(--space-3); }
+      .top-search-button { min-width: 64px; padding: 0 var(--space-2); font-size: 12px; }
+      .study { padding-right: var(--space-3); padding-left: var(--space-3); }
+      .actions { padding-right: var(--space-3); padding-left: var(--space-3); }
+      .action-button { font-size: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="topline">
-      <div class="brand"><div class="brand-mark">方</div><div class="brand-name">中医多科复习</div></div>
-      <div class="badge">公开测试站</div>
-    </div>
-    <h1>中药、方剂、针灸随机抽背</h1>
-    <p class="sub">这是独立测试网站，不影响原来的中药体验版、激活码完整版和后端。资料只来自当前已提供的 Word 与原中药数据，缺失章节不会补写。</p>
-    <div class="tabs" id="subjectTabs"></div>
-  </header>
+  <a class="skip-link" href="#studyQuestion">跳到当前题目</a>
 
-  <main class="stage">
-    <section class="quiz">
-      <div class="toolbar">
-        <div class="filters">
-          <select id="moduleSelect" aria-label="模块"></select>
-          <select id="modeSelect" aria-label="题型">
-            <option value="direct">正向测试</option>
-            <option value="reverse">反向测试</option>
-          </select>
-          <select id="poolSelect" aria-label="范围">
-            <option value="all">全部</option>
-            <option value="review">待加强</option>
-            <option value="favorite">收藏</option>
-          </select>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand" aria-label="中医三科复习">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <p class="brand-name">中医三科复习</p>
+      </div>
+      <div class="edition-context">中药 · 方剂 · 针灸随机抽背</div>
+      <div class="top-actions">
+        <span class="edition-badge">完整题库版 · 826 题</span>
+        <button class="top-search-button" id="searchToggleBtn" type="button" aria-expanded="false" aria-controls="searchPanel">搜索题库</button>
+      </div>
+      <nav class="mobile-subjects" id="mobileSubjectTabs" aria-label="科目切换" role="tablist"></nav>
+    </header>
+
+    <div class="app-body">
+      <aside class="sidebar" aria-label="科目与分类索引">
+        <p class="side-kicker">科目索引 / SUBJECT</p>
+        <nav class="subject-nav" id="subjectTabs" aria-label="科目切换" role="tablist"></nav>
+
+        <section class="current-chapter" aria-labelledby="currentChapterName">
+          <p class="side-label">当前章目 / CHAPTER</p>
+          <span class="chapter-number" id="chapterNumber">01</span>
+          <h2 class="chapter-name" id="currentChapterName">正在载入</h2>
+          <p class="chapter-ratio" id="currentChapterRatio">请稍候</p>
+        </section>
+
+        <section class="category-section" aria-labelledby="categoryHeading">
+          <p class="side-label" id="categoryHeading">分类进度 / PROGRESS</p>
+          <div class="category-list" id="categoryList"></div>
+        </section>
+
+        <div class="side-stats" aria-label="学习统计">
+          <div class="side-stat"><strong id="totalCount">0</strong><span>当前题量</span></div>
+          <div class="side-stat"><strong id="doneCount">0</strong><span>累计已练</span></div>
+          <div class="side-stat"><strong id="reviewCount">0</strong><span>待加强</span></div>
         </div>
-        <button class="ghost" id="resetFilterBtn" type="button">全部分类</button>
-      </div>
+      </aside>
 
-      <div>
-        <div class="label" id="promptLabel">这题是</div>
-        <div class="prompt-name" id="promptName">加载中</div>
-        <div class="chips">
-          <span class="chip" id="subjectChip">科目</span>
-          <span class="chip" id="moduleChip">模块</span>
-          <span class="chip" id="categoryChip">分类</span>
-        </div>
-      </div>
+      <main class="workspace" id="mainContent">
+        <section class="chapter-band" aria-label="当前范围学习进度">
+          <div class="position">
+            <span class="position-label">当前题</span>
+            <span class="position-value"><span id="positionValue">0</span> <span>/ <span id="positionTotal">0</span></span></span>
+          </div>
+          <div class="band-progress">
+            <div class="band-copy">
+              <strong id="chapterBandName">正在载入</strong>
+              <span id="chapterProgressText">已掌握 0 / 0</span>
+            </div>
+            <div class="band-track" id="chapterProgress" role="progressbar" aria-label="当前分类掌握进度" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+              <div class="band-track-fill" id="chapterProgressFill"></div>
+            </div>
+          </div>
+          <div class="band-state">
+            <strong id="bandReviewCount">待加强 0</strong>
+            <span id="bandDoneCount">累计已练 0</span>
+          </div>
+        </section>
 
-      <div class="answer hidden" id="answerBox">先在心里背，再点“看答案”。</div>
+        <section class="search-panel" id="searchPanel" aria-label="题库搜索" hidden>
+          <div class="search-form">
+            <input id="searchInput" type="search" placeholder="搜索药名、方名、穴位、功用、定位、主穴" aria-label="搜索关键词">
+            <select id="searchScope" aria-label="搜索范围">
+              <option value="current">当前科目</option>
+              <option value="all">全部科目</option>
+            </select>
+            <button class="search-submit" id="searchBtn" type="button">搜索</button>
+            <button id="clearSearchBtn" type="button">清空</button>
+          </div>
+          <div class="search-note" id="searchNote" aria-live="polite">输入关键词后点击“搜索”，结果会显示在这里。</div>
+          <div class="results" id="results"></div>
+        </section>
 
-      <div class="actions">
-        <button class="primary" id="revealBtn" type="button">看答案</button>
-        <button id="knowBtn" type="button">会了</button>
-        <button id="againBtn" type="button">再来一遍</button>
-        <button id="favoriteBtn" type="button">收藏</button>
-        <button class="ghost" id="nextBtn" type="button">随机下一题</button>
-      </div>
-    </section>
+        <section class="study" id="studyQuestion" aria-labelledby="promptName">
+          <div class="toolbar">
+            <div class="filters" aria-label="复习设置">
+              <select id="moduleSelect" aria-label="模块"></select>
+              <select id="modeSelect" aria-label="题型">
+                <option value="direct">正向测试</option>
+                <option value="reverse">反向测试</option>
+              </select>
+              <select id="poolSelect" aria-label="范围">
+                <option value="all">全部范围</option>
+                <option value="review">待加强</option>
+                <option value="favorite">收藏</option>
+              </select>
+              <button class="reset-filter" id="resetFilterBtn" type="button">全部分类</button>
+            </div>
+            <div class="session-status" id="sessionStatus">正在载入题库</div>
+          </div>
 
-    <aside class="side">
-      <div class="metric-grid">
-        <div class="metric"><b id="totalCount">0</b><span>当前题量</span></div>
-        <div class="metric"><b id="doneCount">0</b><span>已练</span></div>
-        <div class="metric"><b id="reviewCount">0</b><span>待加强</span></div>
-      </div>
-      <div>
-        <div class="label">分类 / 章节进度</div>
-        <div class="category-list" id="categoryList"></div>
-      </div>
-    </aside>
-  </main>
+          <details class="mobile-category-panel">
+            <summary>分类 / 章节进度 <span class="mobile-category-count" id="mobileCategoryCount">0 个分类</span></summary>
+            <div class="category-list" id="mobileCategoryList"></div>
+          </details>
 
-  <section class="search-panel stage" style="display:block">
-    <div class="search-row">
-      <input id="searchInput" placeholder="搜索药名、方名、穴位、功用、定位、主穴">
-      <select id="searchScope" aria-label="搜索范围">
-        <option value="current">当前科目</option>
-        <option value="all">全部科目</option>
-      </select>
-      <button id="searchBtn" type="button">搜索</button>
-      <button class="ghost" id="clearSearchBtn" type="button">清空</button>
+          <div class="question-layout">
+            <div class="recall-rail" aria-hidden="true"><span class="rail-position" id="railPosition">—</span></div>
+
+            <div class="question-head">
+              <p class="prompt-label" id="promptLabel">正在载入题库</p>
+              <h1 class="prompt-name" id="promptName" aria-live="polite">请稍候</h1>
+              <div class="chips" aria-label="题目分类">
+                <span class="chip" id="subjectChip">科目</span>
+                <span class="chip" id="moduleChip">模块</span>
+                <span class="chip" id="categoryChip">分类</span>
+              </div>
+            </div>
+
+            <div class="answer-rail" aria-hidden="true"><span class="rail-answer" id="answerRailMark">答</span></div>
+
+            <section class="answer-block is-hidden" id="answerBox" aria-live="polite">
+              <p class="answer-placeholder">先在心里背，再点“看答案”。</p>
+            </section>
+
+            <aside class="question-context" aria-label="本题学习信息">
+              <section class="context-block">
+                <h2 class="context-heading">所在章目</h2>
+                <p class="context-value" id="contextChapter">未选择</p>
+                <p class="context-detail" id="contextProgress">已掌握 0 / 0</p>
+                <div class="mini-progress" aria-hidden="true"><div class="mini-progress-fill" id="miniProgressFill"></div></div>
+              </section>
+              <section class="context-block">
+                <h2 class="context-heading">记忆状态</h2>
+                <p class="context-value" id="memoryStatus">未练习</p>
+                <p class="context-detail">“会了”会计入掌握，“再来一遍”会加入待加强。</p>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <footer class="actions" aria-label="学习反馈">
+          <button class="action-button primary" id="revealBtn" type="button" disabled>看答案</button>
+          <button class="action-button" id="knowBtn" type="button" disabled>会了</button>
+          <button class="action-button emphasis" id="againBtn" type="button" disabled>再来一遍</button>
+          <button class="action-button" id="favoriteBtn" type="button" aria-pressed="false" disabled>收藏</button>
+          <button class="action-button secondary-primary" id="nextBtn" type="button" disabled>随机下一题</button>
+        </footer>
+      </main>
     </div>
-    <div class="search-note" id="searchNote">可搜索当前科目，也可以切换为全部科目。</div>
-    <div class="results" id="results"></div>
-  </section>
 
-  <footer>
-    <div id="sourceSummary"></div>
-  </footer>
+    <footer class="site-footer"><div id="sourceSummary">正在载入资料说明。</div></footer>
+  </div>
 
   <script>
     let items = [];
@@ -235,12 +1175,27 @@
     const $ = (id) => document.getElementById(id);
     const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
     const stateKey = () => `${storagePrefix}:${activeSubject}:${activeModule}`;
+    const subjectNumber = (subject) => String(subjects.indexOf(subject) + 1).padStart(2, "0");
+    const subjectCount = (subject) => items.filter(item => item.subject === subject).length;
+
     const loadState = () => {
-      const base = {done:0, know:0, review:[], favorite:[], mastered:[]};
-      try { return Object.assign(base, JSON.parse(localStorage.getItem(stateKey()) || "{}")); }
-      catch { return base; }
+      const base = {done: 0, know: 0, review: [], favorite: [], mastered: []};
+      try {
+        const saved = Object.assign({}, base, JSON.parse(localStorage.getItem(stateKey()) || "{}"));
+        saved.review = Array.isArray(saved.review) ? saved.review : [];
+        saved.favorite = Array.isArray(saved.favorite) ? saved.favorite : [];
+        saved.mastered = Array.isArray(saved.mastered) ? saved.mastered : [];
+        return saved;
+      } catch {
+        return base;
+      }
     };
-    const saveState = (state) => localStorage.setItem(stateKey(), JSON.stringify(state));
+
+    const saveState = (state) => {
+      try { localStorage.setItem(stateKey(), JSON.stringify(state)); }
+      catch { /* 浏览器禁止本地存储时仍允许继续抽背。 */ }
+    };
+
     const currentItems = () => items.filter(item => item.subject === activeSubject && item.module === activeModule);
     const filteredItems = () => {
       const state = loadState();
@@ -251,24 +1206,25 @@
       return pool;
     };
     const modulesForSubject = (subject) => [...new Set(items.filter(item => item.subject === subject).map(item => item.module))];
-    const promptFor = (item) => {
-      if ($("modeSelect").value === "reverse") {
-        return item.reversePrompt || item.primaryAnswer || item.name;
-      }
-      return item.name;
-    };
-    const answerFor = (item) => {
-      if ($("modeSelect").value === "reverse") return item.name;
-      return item.primaryAnswer || "见附加信息";
-    };
-    const promptLabelFor = () => $("modeSelect").value === "reverse" ? "根据提示回忆名称" : "这题是";
+    const promptFor = (item) => $("modeSelect").value === "reverse" ? (item.reversePrompt || item.primaryAnswer || item.name) : item.name;
+    const answerFor = (item) => $("modeSelect").value === "reverse" ? item.name : (item.primaryAnswer || "见附加信息");
+    const promptLabelFor = () => $("modeSelect").value === "reverse" ? "根据提示回忆名称" : `请回忆这${activeSubject === "中药" ? "味药" : activeSubject === "方剂" ? "首方" : "项内容"}的${activeModule === "功效" ? "功效" : activeModule}`;
 
     const renderSubjectTabs = () => {
-      $("subjectTabs").innerHTML = subjects.map(subject => `<button class="tab ${subject === activeSubject ? "active" : ""}" type="button" data-subject="${subject}">${subject}</button>`).join("");
-      document.querySelectorAll("[data-subject]").forEach(btn => btn.addEventListener("click", () => {
-        activeSubject = btn.dataset.subject;
+      $("subjectTabs").innerHTML = subjects.map(subject => `
+        <button class="subject-button" type="button" role="tab" aria-selected="${subject === activeSubject}" data-subject="${subject}">
+          <span class="subject-number">${subjectNumber(subject)}</span>
+          <span class="subject-name">${subject}</span>
+          <span class="subject-count">${subjectCount(subject)}</span>
+        </button>`).join("");
+      $("mobileSubjectTabs").innerHTML = subjects.map(subject => `
+        <button type="button" role="tab" aria-selected="${subject === activeSubject}" data-subject="${subject}">${subject}</button>`).join("");
+      document.querySelectorAll("[data-subject]").forEach(button => button.addEventListener("click", () => {
+        if (button.dataset.subject === activeSubject) return;
+        activeSubject = button.dataset.subject;
         activeModule = modulesForSubject(activeSubject)[0] || "";
         activeCategory = "";
+        $("poolSelect").value = "all";
         renderAll();
       }));
     };
@@ -280,33 +1236,133 @@
       $("moduleSelect").value = activeModule;
     };
 
+    const categoryData = () => {
+      const all = currentItems();
+      const mastered = new Set(loadState().mastered);
+      return [...new Set(all.map(item => item.category || "未分类"))].map(category => {
+        const categoryItems = all.filter(item => (item.category || "未分类") === category);
+        const done = categoryItems.filter(item => mastered.has(item.id)).length;
+        return {category, done, total: categoryItems.length, pct: categoryItems.length ? Math.round(done / categoryItems.length * 100) : 0};
+      });
+    };
+
+    const categoryMarkup = (categories) => categories.map(({category, done, total, pct}) => `
+      <button class="cat ${category === activeCategory ? "active" : ""}" type="button" data-category="${escapeHtml(category)}">
+        <span class="cat-row"><span class="cat-name">${escapeHtml(category)}</span><span>${done}/${total}</span></span>
+        <span class="progress" aria-hidden="true"><span class="bar" style="display:block;width:${pct}%"></span></span>
+      </button>`).join("") || `<div class="empty">当前科目还没有导入内容。</div>`;
+
+    const bindCategoryButtons = () => {
+      document.querySelectorAll("[data-category]").forEach(node => node.addEventListener("click", () => {
+        activeCategory = node.dataset.category === activeCategory ? "" : node.dataset.category;
+        $("poolSelect").value = "all";
+        pick();
+        renderStats();
+      }));
+    };
+
+    const renderProgressContext = () => {
+      const state = loadState();
+      const pool = filteredItems();
+      const position = current ? Math.max(0, pool.findIndex(item => item.id === current.id)) + 1 : 0;
+      const chapter = current?.category || activeCategory || activeModule || "未选择";
+      const chapterItems = currentItems().filter(item => !chapter || chapter === activeModule || (item.category || "未分类") === chapter);
+      const mastered = new Set(state.mastered);
+      const masteredCount = chapterItems.filter(item => mastered.has(item.id)).length;
+      const chapterTotal = chapterItems.length;
+      const pct = chapterTotal ? Math.round(masteredCount / chapterTotal * 100) : 0;
+      const status = !current ? "未选择" : state.review.includes(current.id) ? "待加强" : state.mastered.includes(current.id) ? "已掌握" : "未练习";
+
+      $("positionValue").textContent = position;
+      $("positionTotal").textContent = pool.length;
+      $("railPosition").textContent = position || "—";
+      $("chapterBandName").textContent = chapter;
+      $("chapterProgressText").textContent = `已掌握 ${masteredCount} / ${chapterTotal}`;
+      $("chapterProgressFill").style.width = `${pct}%`;
+      $("chapterProgress").setAttribute("aria-valuemax", chapterTotal);
+      $("chapterProgress").setAttribute("aria-valuenow", masteredCount);
+      $("chapterNumber").textContent = subjectNumber(activeSubject);
+      $("currentChapterName").textContent = chapter;
+      $("currentChapterRatio").textContent = `已掌握 ${masteredCount} / ${chapterTotal}`;
+      $("contextChapter").textContent = chapter;
+      $("contextProgress").textContent = `已掌握 ${masteredCount} / ${chapterTotal}`;
+      $("miniProgressFill").style.width = `${pct}%`;
+      $("memoryStatus").textContent = status;
+      $("bandReviewCount").textContent = `待加强 ${state.review.length}`;
+      $("bandDoneCount").textContent = `累计已练 ${state.done || 0}`;
+      $("sessionStatus").textContent = `当前 ${pool.length} 题 · 累计已练 ${state.done || 0} · 待加强 ${state.review.length}`;
+    };
+
+    const renderStats = () => {
+      const state = loadState();
+      const categories = categoryData();
+      $("totalCount").textContent = filteredItems().length;
+      $("doneCount").textContent = state.done || 0;
+      $("reviewCount").textContent = state.review.length;
+      $("categoryList").innerHTML = categoryMarkup(categories);
+      $("mobileCategoryList").innerHTML = categoryMarkup(categories);
+      $("mobileCategoryCount").textContent = `${categories.length} 个分类`;
+      bindCategoryButtons();
+      renderProgressContext();
+    };
+
     const renderAnswer = () => {
       const box = $("answerBox");
+      const mark = $("answerRailMark");
       if (!current || !revealed) {
-        box.className = "answer hidden";
-        box.textContent = "先在心里背，再点“看答案”。";
+        box.className = "answer-block is-hidden";
+        box.innerHTML = `<p class="answer-placeholder">${current ? "先在心里背，再点“看答案”。" : "当前范围暂无题目，请切换范围或分类。"}</p>`;
+        mark.classList.remove("revealed");
         return;
       }
-      const extras = Object.entries(current.extra || {}).filter(([key, value]) => value && value !== answerFor(current));
-      box.className = "answer";
-      box.innerHTML = `<div class="answer-head"><div class="label">${escapeHtml($("modeSelect").value === "reverse" ? "答案" : current.primaryLabel || "答案")}</div></div>
-        <div class="answer-main">${escapeHtml(answerFor(current))}</div>
-        <div class="answer-extra">${extras.map(([key, value]) => `<div class="field"><strong>${escapeHtml(key)}</strong><span>${escapeHtml(value)}</span></div>`).join("")}</div>`;
+      const answer = answerFor(current);
+      const extras = Object.entries(current.extra || {}).filter(([, value]) => value && value !== answer);
+      box.className = "answer-block";
+      box.innerHTML = `
+        <div class="answer-grid">
+          <p class="answer-label">${escapeHtml($("modeSelect").value === "reverse" ? "答案" : current.primaryLabel || "答案")}</p>
+          <div>
+            <p class="answer-main">${escapeHtml(answer)}</p>
+            <div class="answer-extra">${extras.map(([key, value]) => `<div class="field"><strong>${escapeHtml(key)}</strong><span>${escapeHtml(value)}</span></div>`).join("")}</div>
+          </div>
+        </div>`;
+      mark.classList.add("revealed");
+    };
+
+    const updateActionAvailability = () => {
+      const available = Boolean(current);
+      ["revealBtn", "knowBtn", "againBtn", "favoriteBtn", "nextBtn"].forEach(id => { $(id).disabled = !available; });
+      $("revealBtn").disabled = !available || revealed;
+      $("revealBtn").textContent = revealed ? "答案已展开" : "看答案";
+      const favorite = available && loadState().favorite.includes(current.id);
+      $("favoriteBtn").textContent = favorite ? "已收藏" : "收藏";
+      $("favoriteBtn").setAttribute("aria-pressed", String(favorite));
     };
 
     const pick = (preferredId = "") => {
       const pool = filteredItems();
+      const previousId = current?.id;
       if (!pool.length) {
         current = null;
-        $("promptName").textContent = "暂无题目";
+        revealed = false;
         $("promptLabel").textContent = "当前范围";
+        $("promptName").textContent = "暂无题目";
+        $("promptName").className = "prompt-name";
         $("subjectChip").textContent = activeSubject;
         $("moduleChip").textContent = activeModule || "未导入";
         $("categoryChip").textContent = activeCategory || "全部分类";
         renderAnswer();
+        renderStats();
+        updateActionAvailability();
         return;
       }
-      current = preferredId ? pool.find(item => item.id === preferredId) || pool[0] : pool[Math.floor(Math.random() * pool.length)];
+
+      if (preferredId) {
+        current = pool.find(item => item.id === preferredId) || pool[0];
+      } else {
+        const candidates = pool.length > 1 ? pool.filter(item => item.id !== previousId) : pool;
+        current = candidates[Math.floor(Math.random() * candidates.length)];
+      }
       revealed = false;
       $("promptLabel").textContent = promptLabelFor();
       $("promptName").textContent = promptFor(current);
@@ -316,7 +1372,7 @@
       $("categoryChip").textContent = current.category || "未分类";
       renderAnswer();
       renderStats();
-      updateFavoriteButton();
+      updateActionAvailability();
     };
 
     const mark = (type) => {
@@ -327,63 +1383,49 @@
         state.know = Number(state.know || 0) + 1;
         state.review = state.review.filter(id => id !== current.id);
         if (!state.mastered.includes(current.id)) state.mastered.push(current.id);
-      } else {
-        if (!state.review.includes(current.id)) state.review.push(current.id);
+      } else if (!state.review.includes(current.id)) {
+        state.review.push(current.id);
       }
       saveState(state);
       pick();
-      renderAllButKeepCard();
     };
 
     const toggleFavorite = () => {
       if (!current) return;
       const state = loadState();
-      if (state.favorite.includes(current.id)) state.favorite = state.favorite.filter(id => id !== current.id);
-      else state.favorite.push(current.id);
+      state.favorite = state.favorite.includes(current.id) ? state.favorite.filter(id => id !== current.id) : [...state.favorite, current.id];
       saveState(state);
-      updateFavoriteButton();
       renderStats();
+      updateActionAvailability();
     };
 
-    const updateFavoriteButton = () => {
-      const state = loadState();
-      $("favoriteBtn").textContent = current && state.favorite.includes(current.id) ? "已收藏" : "收藏";
-    };
-
-    const renderStats = () => {
-      const state = loadState();
-      const all = currentItems();
-      $("totalCount").textContent = filteredItems().length;
-      $("doneCount").textContent = state.done || 0;
-      $("reviewCount").textContent = state.review.length || 0;
-      const mastered = new Set(state.mastered || []);
-      const categories = [...new Set(all.map(item => item.category || "未分类"))];
-      $("categoryList").innerHTML = categories.map(category => {
-        const catItems = all.filter(item => (item.category || "未分类") === category);
-        const done = catItems.filter(item => mastered.has(item.id)).length;
-        const pct = catItems.length ? Math.round(done / catItems.length * 100) : 0;
-        return `<div class="cat ${category === activeCategory ? "active" : ""}" data-category="${escapeHtml(category)}"><div class="cat-row"><div class="cat-name">${escapeHtml(category)}</div><div>${done}/${catItems.length}</div></div><div class="progress"><div class="bar" style="width:${pct}%"></div></div></div>`;
-      }).join("") || `<div class="empty">当前科目还没有导入内容。</div>`;
-      document.querySelectorAll("[data-category]").forEach(node => node.addEventListener("click", () => {
-        activeCategory = node.dataset.category === activeCategory ? "" : node.dataset.category;
-        pick();
-        renderStats();
-      }));
+    const toggleSearch = (forceOpen) => {
+      const panel = $("searchPanel");
+      const open = typeof forceOpen === "boolean" ? forceOpen : panel.hidden;
+      panel.hidden = !open;
+      $("searchToggleBtn").setAttribute("aria-expanded", String(open));
+      $("searchToggleBtn").textContent = open ? "收起搜索" : "搜索题库";
+      if (open) window.setTimeout(() => $("searchInput").focus(), 0);
     };
 
     const search = () => {
-      const q = $("searchInput").value.trim().toLowerCase();
-      if (!q) {
-        $("searchNote").textContent = "请输入关键词。";
+      toggleSearch(true);
+      const query = $("searchInput").value.trim().toLowerCase();
+      if (!query) {
+        $("searchNote").textContent = "请输入关键词后再搜索。";
         $("results").innerHTML = "";
         return;
       }
       const scope = $("searchScope").value;
       const base = scope === "all" ? items : items.filter(item => item.subject === activeSubject);
-      const hits = base.filter(item => JSON.stringify(item).toLowerCase().includes(q)).slice(0, 50);
+      const hits = base.filter(item => JSON.stringify(item).toLowerCase().includes(query)).slice(0, 50);
       const scopeText = scope === "all" ? "全部科目" : activeSubject;
-      $("searchNote").textContent = hits.length ? `${scopeText}找到 ${hits.length} 条结果，点击可切换到对应卡片。` : `${scopeText}没有找到结果。`;
-      $("results").innerHTML = hits.map(item => `<div class="result" data-result="${item.id}"><div class="result-row"><div class="result-name">${escapeHtml(item.name)}</div><div class="chip">${escapeHtml(item.subject)} / ${escapeHtml(item.module)}</div></div><div class="label">${escapeHtml(item.category || "")}</div></div>`).join("");
+      $("searchNote").textContent = hits.length ? `${scopeText}找到 ${hits.length} 条结果，点击即可切换到对应题目。` : `${scopeText}没有找到“${$("searchInput").value.trim()}”。`;
+      $("results").innerHTML = hits.map(item => `
+        <button class="result" type="button" data-result="${item.id}">
+          <span class="result-row"><span class="result-name">${escapeHtml(item.name)}</span><span class="result-type">${escapeHtml(item.subject)} / ${escapeHtml(item.module)}</span></span>
+          <span class="result-category">${escapeHtml(item.category || "未分类")}</span>
+        </button>`).join("");
       document.querySelectorAll("[data-result]").forEach(node => node.addEventListener("click", () => {
         const item = items.find(entry => entry.id === node.dataset.result);
         if (!item) return;
@@ -394,29 +1436,27 @@
         renderSubjectTabs();
         renderModules();
         pick(item.id);
-        renderStats();
-        window.scrollTo({top: 0, behavior: "smooth"});
+        toggleSearch(false);
+        $("studyQuestion").scrollIntoView({behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
       }));
     };
 
     const clearSearch = () => {
       $("searchInput").value = "";
       $("results").innerHTML = "";
-      $("searchNote").textContent = "可搜索当前科目，也可以切换为全部科目。";
+      $("searchNote").textContent = "输入关键词后点击“搜索”，结果会显示在这里。";
+      $("searchInput").focus();
     };
 
     const renderSourceSummary = () => {
-      $("sourceSummary").textContent = `数据概况：中药 ${extractionReport.counts["中药"] || 0} 条，方剂 ${extractionReport.counts["方剂"] || 0} 条，针灸穴位 ${extractionReport.counts["针灸-穴位"] || 0} 条，针灸病证选穴 ${extractionReport.counts["针灸-病证选穴"] || 0} 条。`;
+      const counts = extractionReport.counts || {};
+      $("sourceSummary").textContent = `完整题库：中药 ${counts["中药"] || 0} 条，方剂 ${counts["方剂"] || 0} 条，针灸穴位 ${counts["针灸-穴位"] || 0} 条，针灸病证选穴 ${counts["针灸-病证选穴"] || 0} 条。资料来自现有中药数据与已提供的方剂、针灸 Word，内容用于复习辅助，请以教材和课程要求为准。`;
     };
 
-    const renderAllButKeepCard = () => {
+    const renderAll = () => {
       renderSubjectTabs();
       renderModules();
-      renderStats();
       renderSourceSummary();
-    };
-    const renderAll = () => {
-      renderAllButKeepCard();
       pick();
     };
 
@@ -424,36 +1464,35 @@
       try {
         const [itemsResponse, reportResponse] = await Promise.all([
           fetch("data/review_items.json", {cache: "no-store"}),
-          fetch("data/extraction_report.json", {cache: "no-store"}),
+          fetch("data/extraction_report.json", {cache: "no-store"})
         ]);
         if (!itemsResponse.ok) throw new Error("review_items.json 加载失败");
         items = await itemsResponse.json();
         extractionReport = reportResponse.ok ? await reportResponse.json() : {counts: {}, sources: []};
       } catch (error) {
         $("promptName").textContent = "数据加载失败";
-        $("promptLabel").textContent = "请刷新重试";
-        $("answerBox").className = "answer hidden";
-        $("answerBox").textContent = "如果一直失败，可能是网络或 GitHub Pages 资源加载问题。";
+        $("promptLabel").textContent = "请刷新页面重试";
+        $("answerBox").className = "answer-block is-hidden";
+        $("answerBox").innerHTML = `<p class="answer-placeholder">如果一直失败，可能是当前网络无法读取题库文件。</p>`;
+        $("sessionStatus").textContent = "题库连接失败";
         $("sourceSummary").textContent = error.message || "数据加载失败。";
         throw error;
       }
     };
 
-    $("moduleSelect").addEventListener("change", () => { activeModule = $("moduleSelect").value; activeCategory = ""; pick(); renderStats(); });
+    $("moduleSelect").addEventListener("change", () => { activeModule = $("moduleSelect").value; activeCategory = ""; $("poolSelect").value = "all"; pick(); renderStats(); });
     $("modeSelect").addEventListener("change", () => pick(current?.id));
     $("poolSelect").addEventListener("change", () => pick());
     $("resetFilterBtn").addEventListener("click", () => { activeCategory = ""; $("poolSelect").value = "all"; pick(); renderStats(); });
-    $("revealBtn").addEventListener("click", () => { revealed = true; renderAnswer(); });
+    $("searchToggleBtn").addEventListener("click", () => toggleSearch());
+    $("revealBtn").addEventListener("click", () => { revealed = true; renderAnswer(); updateActionAvailability(); });
     $("knowBtn").addEventListener("click", () => mark("know"));
     $("againBtn").addEventListener("click", () => mark("again"));
     $("favoriteBtn").addEventListener("click", toggleFavorite);
     $("nextBtn").addEventListener("click", () => pick());
     $("searchBtn").addEventListener("click", search);
     $("clearSearchBtn").addEventListener("click", clearSearch);
-    $("searchScope").addEventListener("change", () => {
-      if ($("searchInput").value.trim()) search();
-      else clearSearch();
-    });
+    $("searchScope").addEventListener("change", () => { if ($("searchInput").value.trim()) search(); });
     $("searchInput").addEventListener("keydown", event => { if (event.key === "Enter") search(); });
 
     loadData().then(renderAll);
