@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#DFE4DB">
+  <meta name="theme-color" content="#E7E9E2">
   <title>中医三科复习完整版</title>
   <style>
     :root {
@@ -1202,6 +1202,524 @@
       }
     }
   </style>
+  <style id="focus-preview-styles">
+    :root {
+      --chrome: #e7e9e2;
+      --paper: #faf7ed;
+      --paper-deep: #f3efe3;
+      --ink: #282b27;
+      --muted-ink: #656a63;
+      --seal: #a65349;
+      --line: #ddd9cd;
+      --ledger: #34423b;
+      --ledger-line: #758078;
+      --focus-width: 780px;
+      --topbar-height: 64px;
+    }
+
+    html,
+    body { background: var(--paper); }
+
+    body.library-open { overflow: hidden; }
+
+    .app { min-height: 100dvh; background: var(--paper); }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      grid-template-columns: minmax(180px, 1fr) minmax(280px, 420px) minmax(180px, 1fr);
+      min-height: var(--topbar-height);
+      padding: 0 clamp(16px, 3vw, 40px);
+      border-bottom-color: var(--line);
+      background: rgba(231, 233, 226, .96);
+    }
+
+    .brand {
+      align-self: auto;
+      gap: 10px;
+      padding: 0;
+      border-right: 0;
+    }
+
+    .brand-mark { height: 24px; }
+    .brand-name { font-size: 19px; }
+    .edition-context { display: none; }
+
+    .top-actions {
+      justify-self: end;
+      gap: 12px;
+      padding-right: 0;
+    }
+
+    .edition-badge {
+      min-height: 28px;
+      padding: 0 9px;
+      border-color: #d3d6ce;
+      font-size: 11px;
+    }
+
+    .library-toggle {
+      min-width: 88px;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid var(--ledger);
+      border-radius: 4px;
+      background: var(--ledger);
+      color: var(--paper);
+      font-size: 13px;
+      font-weight: 600;
+      transition: background-color var(--ease), border-color var(--ease);
+    }
+
+    .library-toggle:hover,
+    .library-toggle[aria-expanded="true"] {
+      border-color: var(--seal);
+      background: var(--seal);
+    }
+
+    .mobile-subjects {
+      justify-self: center;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(76px, 1fr));
+      width: min(100%, 360px);
+      padding: 0;
+    }
+
+    .mobile-subjects button {
+      min-width: 0;
+      min-height: 44px;
+      padding: 0 12px;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: var(--muted-ink);
+      font-family: var(--formal-font);
+      font-size: 16px;
+      transition: color var(--ease), border-color var(--ease);
+    }
+
+    .mobile-subjects button:hover { color: var(--ink); }
+    .mobile-subjects button[aria-selected="true"] { border-bottom-color: var(--seal); color: var(--ink); }
+
+    .app-body {
+      display: flex;
+      flex: 1 1 auto;
+      min-width: 0;
+      align-items: stretch;
+    }
+
+    .workspace {
+      flex: 1 1 auto;
+      min-height: calc(100dvh - var(--topbar-height));
+      background: var(--paper);
+    }
+
+    .chapter-band {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 24px;
+      width: min(calc(100% - 48px), var(--focus-width));
+      min-height: 66px;
+      margin: 0 auto;
+      padding: 14px 0 12px;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .position {
+      align-self: center;
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      gap: 7px;
+      border-right: 0;
+      white-space: nowrap;
+    }
+
+    .position-label { color: var(--muted-ink); font-size: 11px; letter-spacing: 0; opacity: 1; }
+    .position-value { margin: 0; font-size: 18px; }
+    .position-value span { font-size: 12px; }
+
+    .band-progress { align-self: center; padding: 0; }
+    .band-copy { gap: 12px; margin-bottom: 7px; }
+    .band-copy strong { color: var(--ink); font-size: 14px; }
+    .band-copy span { color: var(--muted-ink); opacity: 1; }
+    .band-track { height: 3px; background: var(--line); }
+    .band-track-fill { background: var(--seal); }
+    .band-state { display: none; }
+
+    .study {
+      flex: 1 1 auto;
+      width: min(100%, calc(var(--focus-width) + 48px));
+      margin: 0 auto;
+      padding: clamp(36px, 7vh, 72px) 24px 48px;
+    }
+
+    .question-layout {
+      display: block;
+      width: 100%;
+      max-width: var(--focus-width);
+      min-height: 0;
+      margin: 0 auto;
+    }
+
+    .recall-rail,
+    .answer-rail { display: none; }
+
+    .question-head {
+      min-height: clamp(220px, 34vh, 360px);
+      padding: 0 0 48px;
+    }
+
+    .prompt-label {
+      margin-bottom: 28px;
+      color: var(--muted-ink);
+      font-size: 14px;
+    }
+
+    .prompt-name {
+      max-width: 100%;
+      font-size: clamp(48px, 7vw, 76px);
+      line-height: 1.24;
+      text-wrap: balance;
+    }
+
+    .prompt-name.reverse {
+      max-width: 760px;
+      font-size: clamp(25px, 3.2vw, 38px);
+      line-height: 1.6;
+      text-wrap: pretty;
+    }
+
+    .chips {
+      gap: 8px 18px;
+      margin-top: 28px;
+      font-size: 12px;
+    }
+
+    .chip { padding-left: 10px; }
+    .chip::before { width: 3px; height: 3px; }
+
+    .answer-block {
+      min-height: 150px;
+      padding: 28px 0 32px;
+      border-top: 1px solid var(--ink);
+    }
+
+    .answer-block.is-hidden { border-top-color: var(--line); border-top-style: dashed; }
+    .answer-placeholder { font-size: 14px; }
+    .answer-grid { grid-template-columns: 88px minmax(0, 1fr); gap: 24px; }
+    .answer-label { letter-spacing: 0; }
+    .answer-main { font-size: clamp(23px, 3vw, 32px); line-height: 1.7; }
+    .answer-extra { gap: 16px; margin-top: 24px; }
+    .field { grid-template-columns: 88px minmax(0, 1fr); gap: 24px; }
+
+    .question-utilities {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .session-status {
+      overflow: hidden;
+      color: var(--muted-ink);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .edit-answer-button { min-height: 44px; white-space: nowrap; }
+    .edit-label-compact { display: none; }
+    .question-context { display: none; }
+
+    .actions {
+      position: sticky;
+      bottom: 0;
+      grid-template-columns: repeat(5, minmax(104px, 144px));
+      justify-content: center;
+      gap: 8px;
+      margin-top: auto;
+      padding: 12px 24px max(12px, env(safe-area-inset-bottom));
+      border-top-color: var(--line);
+      background: rgba(231, 233, 226, .97);
+      backdrop-filter: blur(10px);
+    }
+
+    .action-button { min-width: 0; min-height: 48px; padding: 0 12px; }
+    .action-button.primary { border-color: var(--seal); background: var(--seal); }
+    .action-button.secondary-primary { border-color: var(--ledger); background: var(--ledger); }
+
+    .library-scrim {
+      position: fixed;
+      z-index: 39;
+      inset: 0;
+      border: 0;
+      background: rgba(40, 43, 39, .44);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--ease);
+    }
+
+    body.library-open .library-scrim { opacity: 1; pointer-events: auto; }
+
+    .library-drawer {
+      position: fixed;
+      z-index: 40;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(440px, 100%);
+      padding: 0 24px max(24px, env(safe-area-inset-bottom));
+      border-left: 1px solid var(--line);
+      background: var(--paper);
+      box-shadow: -18px 0 48px rgba(40, 43, 39, .12);
+      overflow-y: auto;
+      transform: translateX(102%);
+      visibility: hidden;
+      transition: transform 220ms cubic-bezier(.2, .7, .2, 1), visibility 0s linear 220ms;
+    }
+
+    body.library-open .library-drawer {
+      transform: translateX(0);
+      visibility: visible;
+      transition: transform 220ms cubic-bezier(.2, .7, .2, 1), visibility 0s;
+    }
+
+    .drawer-header {
+      position: sticky;
+      z-index: 1;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 72px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper);
+    }
+
+    .drawer-header h2 { margin: 0; font-family: var(--formal-font); font-size: 21px; font-weight: 600; }
+    .drawer-close {
+      width: 44px;
+      min-height: 44px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .drawer-section { padding: 24px 0; border-bottom: 1px solid var(--line); }
+    .drawer-section-title { margin: 0 0 14px; color: var(--muted-ink); font-size: 12px; font-weight: 600; }
+    #subjectTabs { display: none; }
+
+    .drawer-section .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .drawer-section .filter-field,
+    .drawer-section .category-filter { min-width: 0; }
+    .drawer-section .filters select {
+      min-height: 44px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--paper-deep);
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .hint-setting {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .hint-setting-copy { min-width: 0; }
+    .hint-setting-copy strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .hint-setting-copy span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted-ink);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .switch-control {
+      position: relative;
+      flex: 0 0 auto;
+      width: 44px;
+      height: 26px;
+      cursor: pointer;
+    }
+
+    .switch-control input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      opacity: 0;
+    }
+
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      border: 1px solid #bec3b8;
+      border-radius: 999px;
+      background: #d9dcd4;
+      transition: background-color var(--ease), border-color var(--ease);
+    }
+
+    .switch-track::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--paper);
+      box-shadow: 0 1px 3px rgba(40, 43, 39, .24);
+      transition: transform var(--ease);
+    }
+
+    .switch-control input:checked + .switch-track {
+      border-color: var(--seal);
+      background: var(--seal);
+    }
+
+    .switch-control input:checked + .switch-track::after { transform: translateX(18px); }
+    .switch-control input:focus-visible + .switch-track { outline: 2px solid var(--seal); outline-offset: 3px; }
+
+    .drawer-search-toggle {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .drawer-search-toggle[aria-expanded="true"] { border-color: var(--seal); color: var(--seal); }
+    .search-panel { padding: 14px 0 0; border: 0; background: transparent; }
+    .search-form { grid-template-columns: minmax(0, 1fr) 116px; gap: 8px; }
+    .search-form input { grid-column: 1 / -1; }
+    .search-form input,
+    .search-form select { background: var(--paper-deep); }
+    .search-form button { width: 100%; }
+    .results { grid-template-columns: 1fr; max-height: none; }
+
+    .drawer-category-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .drawer-category-heading .drawer-section-title { margin: 0; }
+    .mobile-category-count { color: var(--muted-ink); font-size: 11px; }
+    .library-drawer .category-list { display: grid; gap: 6px; max-height: none; overflow: visible; }
+    .library-drawer .cat { border-color: transparent; color: var(--ink); }
+    .library-drawer .cat:hover { border-color: var(--line); }
+    .library-drawer .cat.active { border-color: var(--seal); background: var(--paper-deep); }
+    .library-drawer .progress { background: var(--line); }
+    #mobileCategoryList { display: none; }
+
+    .side-stats {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 0;
+      padding: 24px 0;
+      border-top: 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .side-stat { padding-right: 8px; }
+    .side-stat strong { color: var(--ink); }
+    .side-stat span { color: var(--muted-ink); opacity: 1; }
+    .drawer-note { padding: 20px 0; color: var(--muted-ink); font-size: 12px; line-height: 1.7; }
+    .legacy-targets { display: none; }
+    .site-footer { display: none; }
+
+    @media (max-width: 800px) {
+      :root { --topbar-height: 108px; }
+      .topbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: 60px 48px;
+        padding: 0 16px;
+      }
+      .brand { padding: 0; }
+      .brand-name { font-size: 18px; }
+      .edition-badge { display: none; }
+      .mobile-subjects {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+        border-top: 1px solid var(--line);
+      }
+      .mobile-subjects button { min-height: 47px; }
+      .library-toggle { min-width: 72px; padding: 0 12px; }
+      .chapter-band { width: calc(100% - 32px); min-height: 60px; gap: 14px; padding: 11px 0 10px; }
+      .band-copy strong { max-width: 50vw; }
+      .study { padding: 32px 20px 36px; }
+      .question-head { min-height: clamp(190px, 30vh, 270px); padding-bottom: 36px; }
+      .prompt-label { margin-bottom: 24px; font-size: 13px; }
+      .prompt-name { font-size: clamp(44px, 15vw, 64px); }
+      .prompt-name.reverse { font-size: clamp(23px, 7vw, 31px); }
+      .chips { margin-top: 24px; }
+      .answer-grid { grid-template-columns: 1fr; gap: 12px; }
+      .answer-main { font-size: clamp(22px, 6.5vw, 29px); }
+      .field { grid-template-columns: 72px minmax(0, 1fr); gap: 16px; }
+      .question-utilities { align-items: flex-start; }
+      .session-status { white-space: normal; }
+      .edit-label-full { display: none; }
+      .edit-label-compact { display: inline; }
+      .actions {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+        padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+      }
+      .action-button { min-height: 48px; padding: 0 2px; font-size: 12px; }
+      .action-label-full { display: none; }
+      .action-label-compact { display: inline; }
+      .library-drawer { padding-right: 20px; padding-left: 20px; }
+    }
+
+    @media (max-width: 420px) {
+      .brand-name { font-size: 17px; }
+      .brand-mark { height: 22px; }
+      .chapter-band { grid-template-columns: auto minmax(0, 1fr); }
+      .position-label { display: none; }
+      .study { padding-right: 16px; padding-left: 16px; }
+      .question-head { min-height: 178px; }
+      .prompt-name { font-size: clamp(40px, 15vw, 58px); }
+      .question-utilities { gap: 8px; }
+      .actions { gap: 4px; padding-right: 8px; padding-left: 8px; }
+      .action-button { font-size: 11px; }
+      .drawer-section .filters { grid-template-columns: 1fr; }
+    }
+
+    @media (orientation: landscape) and (max-height: 560px) {
+      .study { padding-top: 24px; }
+      .question-head { min-height: 150px; }
+    }
+  </style>
 </head>
 <body>
   <a class="skip-link" href="#studyQuestion">跳到当前题目</a>
@@ -1212,38 +1730,14 @@
         <span class="brand-mark" aria-hidden="true"></span>
         <p class="brand-name">中医三科复习</p>
       </div>
-      <div class="edition-context">中药 · 方剂 · 针灸随机抽背</div>
+      <nav class="mobile-subjects" id="mobileSubjectTabs" aria-label="科目切换" role="tablist"></nav>
       <div class="top-actions">
         <span class="edition-badge">完整题库版 · 826 题</span>
-        <button class="top-search-button" id="searchToggleBtn" type="button" aria-expanded="false" aria-controls="searchPanel">搜索题库</button>
+        <button class="library-toggle" id="libraryToggleBtn" type="button" aria-expanded="false" aria-controls="libraryDrawer">题库设置</button>
       </div>
-      <nav class="mobile-subjects" id="mobileSubjectTabs" aria-label="科目切换" role="tablist"></nav>
     </header>
 
     <div class="app-body">
-      <aside class="sidebar" aria-label="科目与分类索引">
-        <p class="side-kicker">科目索引 / SUBJECT</p>
-        <nav class="subject-nav" id="subjectTabs" aria-label="科目切换" role="tablist"></nav>
-
-        <section class="current-chapter" aria-labelledby="currentChapterName">
-          <p class="side-label">当前章目 / CHAPTER</p>
-          <span class="chapter-number" id="chapterNumber">01</span>
-          <p class="chapter-name" id="currentChapterName">正在载入</p>
-          <p class="chapter-ratio" id="currentChapterRatio">请稍候</p>
-        </section>
-
-        <section class="category-section" aria-labelledby="categoryHeading">
-          <p class="side-label" id="categoryHeading">分类进度 / PROGRESS</p>
-          <div class="category-list" id="categoryList"></div>
-        </section>
-
-        <div class="side-stats" aria-label="学习统计">
-          <div class="side-stat"><strong id="totalCount">0</strong><span>当前题量</span></div>
-          <div class="side-stat"><strong id="doneCount">0</strong><span>累计已练</span></div>
-          <div class="side-stat"><strong id="reviewCount">0</strong><span>待加强</span></div>
-        </div>
-      </aside>
-
       <main class="workspace" id="mainContent">
         <section class="chapter-band" aria-label="当前范围学习进度">
           <div class="position">
@@ -1265,50 +1759,7 @@
           </div>
         </section>
 
-        <section class="search-panel" id="searchPanel" aria-label="题库搜索" hidden>
-          <div class="search-form">
-            <input id="searchInput" type="search" placeholder="搜索药名、方名、穴位、功用、定位、主穴" aria-label="搜索关键词">
-            <select id="searchScope" aria-label="搜索范围">
-              <option value="current">当前科目</option>
-              <option value="all">全部科目</option>
-            </select>
-            <button class="search-submit" id="searchBtn" type="button">搜索</button>
-            <button id="clearSearchBtn" type="button">清空</button>
-          </div>
-          <div class="search-note" id="searchNote" aria-live="polite">输入关键词后点击“搜索”，结果会显示在这里。</div>
-          <div class="results" id="results"></div>
-        </section>
-
         <section class="study" id="studyQuestion" aria-labelledby="promptName">
-          <div class="toolbar">
-            <div class="filters" aria-label="复习设置">
-              <label class="filter-field"><span>模块</span><select id="moduleSelect" aria-label="模块"></select></label>
-              <label class="filter-field"><span>题型</span><select id="modeSelect" aria-label="题型">
-                  <option value="direct">正向测试</option>
-                  <option value="reverse">反向测试</option>
-                </select></label>
-              <label class="filter-field"><span>复习范围</span><select id="poolSelect" aria-label="复习范围">
-                  <option value="all">全部题目</option>
-                  <option value="review">待加强</option>
-                  <option value="favorite">收藏</option>
-                </select></label>
-              <label class="filter-field category-filter"><span>分类</span><select id="categorySelect" aria-label="分类">
-                  <option value="">全部分类</option>
-                </select></label>
-            </div>
-            <div class="session-tools">
-              <button class="edit-answer-button" id="editAnswerBtn" type="button" disabled>
-                <span class="edit-label-full">修改本题答案</span><span class="edit-label-compact">修改答案</span>
-              </button>
-              <div class="session-status" id="sessionStatus">正在载入题库</div>
-            </div>
-          </div>
-
-          <details class="mobile-category-panel">
-            <summary>分类 / 章节进度 <span class="mobile-category-count" id="mobileCategoryCount">0 个分类</span></summary>
-            <div class="category-list" id="mobileCategoryList"></div>
-          </details>
-
           <div class="question-layout">
             <div class="recall-rail" aria-hidden="true"><span class="rail-position" id="railPosition">—</span></div>
 
@@ -1327,6 +1778,13 @@
             <section class="answer-block is-hidden" id="answerBox" aria-live="polite">
               <p class="answer-placeholder">先在心里背，再点“看答案”。</p>
             </section>
+
+            <div class="question-utilities">
+              <div class="session-status" id="sessionStatus">正在载入题库</div>
+              <button class="edit-answer-button" id="editAnswerBtn" type="button" disabled>
+                <span class="edit-label-full">修改本题答案</span><span class="edit-label-compact">修改答案</span>
+              </button>
+            </div>
 
             <aside class="question-context" aria-label="本题学习信息">
               <section class="context-block">
@@ -1353,9 +1811,86 @@
         </footer>
       </main>
     </div>
-
-    <footer class="site-footer"><div id="sourceSummary">正在载入资料说明。</div></footer>
   </div>
+
+  <button class="library-scrim" id="libraryScrim" type="button" aria-label="关闭题库设置" tabindex="-1"></button>
+  <aside class="library-drawer" id="libraryDrawer" aria-label="题库设置" aria-hidden="true">
+    <header class="drawer-header">
+      <h2>题库设置</h2>
+      <button class="drawer-close" id="libraryCloseBtn" type="button" aria-label="关闭题库设置">×</button>
+    </header>
+
+    <nav class="subject-nav" id="subjectTabs" aria-label="科目切换" role="tablist"></nav>
+
+    <section class="drawer-section" aria-labelledby="reviewSettingsTitle">
+      <h3 class="drawer-section-title" id="reviewSettingsTitle">复习设置</h3>
+      <div class="filters">
+        <label class="filter-field"><span>模块</span><select id="moduleSelect" aria-label="模块"></select></label>
+        <label class="filter-field"><span>题型</span><select id="modeSelect" aria-label="题型">
+            <option value="direct">正向测试</option>
+            <option value="reverse">反向测试</option>
+          </select></label>
+        <label class="filter-field"><span>复习范围</span><select id="poolSelect" aria-label="复习范围">
+            <option value="all">全部题目</option>
+            <option value="review">待加强</option>
+            <option value="favorite">收藏</option>
+          </select></label>
+        <label class="filter-field category-filter"><span>分类</span><select id="categorySelect" aria-label="分类">
+            <option value="">全部分类</option>
+          </select></label>
+      </div>
+      <div class="hint-setting">
+        <div class="hint-setting-copy">
+          <strong>答题前显示分类提示</strong>
+          <span>关闭后不提前显示“开窍药”等章目，展开答案后再显示。</span>
+        </div>
+        <label class="switch-control" for="categoryHintToggle">
+          <input id="categoryHintToggle" type="checkbox" role="switch" aria-label="答题前显示分类提示">
+          <span class="switch-track" aria-hidden="true"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="drawer-section" aria-labelledby="searchSectionTitle">
+      <h3 class="drawer-section-title" id="searchSectionTitle">查找内容</h3>
+      <button class="drawer-search-toggle" id="searchToggleBtn" type="button" aria-expanded="false" aria-controls="searchPanel">搜索题库</button>
+      <div class="search-panel" id="searchPanel" aria-label="题库搜索" hidden>
+        <div class="search-form">
+          <input id="searchInput" type="search" placeholder="搜索药名、方名、穴位、功用、定位、主穴" aria-label="搜索关键词">
+          <select id="searchScope" aria-label="搜索范围">
+            <option value="current">当前科目</option>
+            <option value="all">全部科目</option>
+          </select>
+          <button class="search-submit" id="searchBtn" type="button">搜索</button>
+          <button id="clearSearchBtn" type="button">清空</button>
+        </div>
+        <div class="search-note" id="searchNote" aria-live="polite">输入关键词后点击“搜索”，结果会显示在这里。</div>
+        <div class="results" id="results"></div>
+      </div>
+    </section>
+
+    <section class="drawer-section" aria-labelledby="categoryHeading">
+      <div class="drawer-category-heading">
+        <h3 class="drawer-section-title" id="categoryHeading">分类 / 章节进度</h3>
+        <span class="mobile-category-count" id="mobileCategoryCount">0 个分类</span>
+      </div>
+      <div class="category-list" id="categoryList"></div>
+      <div class="category-list" id="mobileCategoryList"></div>
+    </section>
+
+    <div class="side-stats" aria-label="学习统计">
+      <div class="side-stat"><strong id="totalCount">0</strong><span>当前题量</span></div>
+      <div class="side-stat"><strong id="doneCount">0</strong><span>累计已练</span></div>
+      <div class="side-stat"><strong id="reviewCount">0</strong><span>待加强</span></div>
+    </div>
+
+    <div class="legacy-targets" aria-hidden="true">
+      <span id="chapterNumber">01</span>
+      <span id="currentChapterName">正在载入</span>
+      <span id="currentChapterRatio">请稍候</span>
+    </div>
+    <div class="drawer-note" id="sourceSummary">正在载入资料说明。</div>
+  </aside>
 
   <div class="custom-modal" id="customModal" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" hidden>
     <section class="custom-dialog" tabindex="-1">
@@ -1376,6 +1911,20 @@
     let items = [];
     let extractionReport = {counts: {}, sources: []};
     const storagePrefix = "tcm-review-test:v1";
+    const preferencesKey = `${storagePrefix}:preferences`;
+    const loadPreferences = () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(preferencesKey) || "{}");
+        return {showCategoryHint: saved.showCategoryHint === true};
+      } catch {
+        return {showCategoryHint: false};
+      }
+    };
+    let preferences = loadPreferences();
+    const savePreferences = () => {
+      try { localStorage.setItem(preferencesKey, JSON.stringify(preferences)); }
+      catch { /* 浏览器禁止本地存储时，本次设置仍然有效。 */ }
+    };
     const subjects = ["中药", "方剂", "针灸"];
     let activeSubject = "中药";
     let activeModule = "功效";
@@ -1383,9 +1932,18 @@
     let current = null;
     let revealed = false;
     let customDialogReturnFocus = null;
+    let libraryReturnFocus = null;
 
     const $ = (id) => document.getElementById(id);
     const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+    const setLibraryOpen = (open) => {
+      if (open) libraryReturnFocus = document.activeElement;
+      document.body.classList.toggle("library-open", open);
+      $("libraryDrawer").setAttribute("aria-hidden", String(!open));
+      $("libraryToggleBtn").setAttribute("aria-expanded", String(open));
+      if (open) window.setTimeout(() => $("libraryCloseBtn").focus(), 0);
+      else if (libraryReturnFocus?.focus) libraryReturnFocus.focus();
+    };
     const stateKey = () => `${storagePrefix}:${activeSubject}:${activeModule}`;
     const subjectNumber = (subject) => String(subjects.indexOf(subject) + 1).padStart(2, "0");
     const subjectCount = (subject) => items.filter(item => item.subject === subject).length;
@@ -1450,7 +2008,12 @@
       ? (hasCustomAnswer(item) ? directAnswerFor(item) : item.reversePrompt || defaultAnswerFor(item) || item.name)
       : item.name;
     const answerFor = (item) => $("modeSelect").value === "reverse" ? item.name : directAnswerFor(item);
-    const promptLabelFor = () => $("modeSelect").value === "reverse" ? "根据提示回忆名称" : `请回忆这${activeSubject === "中药" ? "味药" : activeSubject === "方剂" ? "首方" : "项内容"}的${activeModule === "功效" ? "功效" : activeModule}`;
+    const promptLabelFor = () => {
+      if ($("modeSelect").value === "reverse") return "根据提示回忆名称";
+      if (activeSubject === "中药") return "请回忆这味药的功效";
+      if (activeSubject === "方剂") return "请回忆这首方的功用与主治";
+      return activeModule === "穴位" ? "请回忆该穴位的定位、主治与刺灸法" : "请回忆该病证的治法与选穴";
+    };
 
     const renderSubjectTabs = () => {
       $("subjectTabs").innerHTML = subjects.map(subject => `
@@ -1509,7 +2072,17 @@
         $("categorySelect").value = activeCategory;
         pick();
         renderStats();
+        setLibraryOpen(false);
       }));
+    };
+
+    const renderCategoryHint = () => {
+      const category = current?.category || activeCategory || activeModule || "未选择";
+      const visible = Boolean(current && (preferences.showCategoryHint || revealed));
+      $("categoryChip").hidden = !visible;
+      $("categoryChip").textContent = visible ? category : "";
+      $("chapterBandName").textContent = visible ? category : "分类提示已隐藏";
+      $("contextChapter").textContent = visible ? category : "分类提示已隐藏";
     };
 
     const renderProgressContext = () => {
@@ -1542,6 +2115,7 @@
       $("bandReviewCount").textContent = `待加强 ${state.review.length}`;
       $("bandDoneCount").textContent = `累计已练 ${state.done || 0}`;
       $("sessionStatus").textContent = `当前 ${pool.length} 题 · 累计已练 ${state.done || 0} · 待加强 ${state.review.length}`;
+      renderCategoryHint();
     };
 
     const renderStats = () => {
@@ -1564,6 +2138,7 @@
         box.className = "answer-block is-hidden";
         box.innerHTML = `<p class="answer-placeholder">${current ? "先在心里背，再点“看答案”。" : "当前范围暂无题目，请切换范围或分类。"}</p>`;
         mark.classList.remove("revealed");
+        renderCategoryHint();
         return;
       }
       const answer = answerFor(current);
@@ -1579,6 +2154,7 @@
           </div>
         </div>`;
       mark.classList.add("revealed");
+      renderCategoryHint();
     };
 
     const setActionLabel = (id, full, compact) => {
@@ -1752,6 +2328,7 @@
         renderCategorySelect();
         pick(item.id);
         toggleSearch(false);
+        setLibraryOpen(false);
         $("studyQuestion").scrollIntoView({behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
       }));
     };
@@ -1769,6 +2346,7 @@
     };
 
     const renderAll = () => {
+      $("categoryHintToggle").checked = preferences.showCategoryHint;
       renderSubjectTabs();
       renderModules();
       renderCategorySelect();
@@ -1800,13 +2378,25 @@
     $("modeSelect").addEventListener("change", () => pick(current?.id));
     $("poolSelect").addEventListener("change", () => pick());
     $("categorySelect").addEventListener("change", () => { activeCategory = $("categorySelect").value; $("poolSelect").value = "all"; pick(); renderStats(); });
+    $("categoryHintToggle").addEventListener("change", () => {
+      preferences.showCategoryHint = $("categoryHintToggle").checked;
+      savePreferences();
+      renderCategoryHint();
+    });
+    $("libraryToggleBtn").addEventListener("click", () => setLibraryOpen(!document.body.classList.contains("library-open")));
+    $("libraryCloseBtn").addEventListener("click", () => setLibraryOpen(false));
+    $("libraryScrim").addEventListener("click", () => setLibraryOpen(false));
     $("searchToggleBtn").addEventListener("click", () => toggleSearch());
     $("editAnswerBtn").addEventListener("click", openCustomModal);
     $("customSaveBtn").addEventListener("click", saveCustomAnswer);
     $("restoreAnswerBtn").addEventListener("click", restoreDefaultAnswer);
     $("customCancelBtn").addEventListener("click", closeCustomModal);
     $("customModal").addEventListener("click", event => { if (event.target === $("customModal")) closeCustomModal(); });
-    document.addEventListener("keydown", event => { if (event.key === "Escape" && !$("customModal").hidden) closeCustomModal(); });
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape") return;
+      if (!$("customModal").hidden) closeCustomModal();
+      else if (document.body.classList.contains("library-open")) setLibraryOpen(false);
+    });
     $("revealBtn").addEventListener("click", () => { revealed = true; renderAnswer(); updateActionAvailability(); });
     $("knowBtn").addEventListener("click", () => mark("know"));
     $("againBtn").addEventListener("click", () => mark("again"));
