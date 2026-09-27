@@ -91,6 +91,21 @@ const response = value => async () => ({ok: true, json: async () => structuredCl
 const coreUrl = 'data/review_items.json';
 const reportUrl = 'data/extraction_report.json';
 
+test(`${edition}: current edition badge matches actual data count`, () => {
+  const badge = html.match(/class="edition-badge">([^<]+)</)[1];
+  assert.match(badge, new RegExp(`\\b${data.length} 题`));
+});
+
+test(`${edition}: displayed source counts match current candidate, including trial fallback`, async () => {
+  const a = await app(new Map(), {[reportUrl]: response({...report, fullCounts: undefined})});
+  assert.equal(a.startupError, undefined);
+  const summary = a.node('sourceSummary').textContent;
+  for (const [label, count] of [['中药',374],['方剂',277],['针灸穴位',99],['针灸病证选穴',64]]) {
+    assert.ok(summary.includes(`${label} ${count} 条`), `${label}: ${summary}`);
+  }
+  if (edition === 'zhongyi-review-trial') for (const [label,count] of [['中药',37],['方剂',37],['针灸穴位',20],['针灸病证选穴',17]]) assert.ok(summary.includes(`${label} ${count} 条`));
+});
+
 for (const field of ['done', 'know', 'review', 'mastered', 'favorite']) {
   for (const bad of [null, 'wrong', {}, {toString: null, valueOf: null}, ...(field === 'done' || field === 'know' ? [[], -1, 1.5] : [42])]) {
     test(`${edition}: storage ${field} rejects ${JSON.stringify(bad)} without losing other fields`, async () => {

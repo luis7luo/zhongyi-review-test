@@ -1,0 +1,23 @@
+{
+  "version": "multisubject-rc-20260927",
+  "dataFreezeCommit": "52a869b46b1ce37b375064c543b2e264c1cea85c",
+  "contentGate": "OPEN: zhenjiu-point-044-少泽 / 痣疯",
+  "full": {
+    "files": {
+      "index.html": "27454686a9e0f24e465aa7d97ac8e17abe88ab048ea18ef3ffd2df30ac9f4842",
+      ".nojekyll": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "data/review_items.json": "c259229cf535deef22db4676a02150b6f68379ec2b2ff6b09e1a0d732dde9ac3",
+      "data/extraction_report.json": "35b5682088d3c046d2bde408356141d5e2942eaf3b63b6988ee4c7d40d16507a",
+      "data/correction_report.json": "e41c7ed53dbf2a2df1e503a845775e1d7be19ae941333d3d0f6cc540748531dc",
+      "docs/evidence/tcm_corrections.json": "3f5053ef52c9c846a4c4c92becd29b9548882d1be8b82f6ece645c185012573c"
+    }
+  },
+  "trial": {
+    "files": {
+      "index.html": "cdf788cfd5b75457795d30064e4ad77200da0ff5b9353ea332815e9e738bc727",
+      ".nojekyll": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "data/review_items.json": "d75f1d936cc053860dc257b78223649c4414e5b8ee0df4c7d1ccbd4396ec5c74",
+      "data/extraction_report.json": "bed601ebd56a8249e5e180974aee7f08eec6228316b06215a327ffbc2afc95df"
+    }
+  }
+}
