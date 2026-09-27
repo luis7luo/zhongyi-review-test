@@ -227,3 +227,105 @@ test(`${edition}: marking an empty review pool leaves state unchanged`, async ()
   assert.deepEqual(a.state(), blankState());
   assert.equal(a.writes.length, 0);
 });
+
+// Phase 2: exercise the real favorite handler, including the stale-current
+// boundary where the selected pool becomes empty before another pick occurs.
+for (const item of modules) {
+  for (const mode of ['forward', 'reverse']) {
+    test(`${edition}: ${item.subject}/${item.module} ${mode} removing final favorite clears stale actions`, async () => {
+      const initial = {...blankState(), done: 12, know: 7, mastered: [item.id], favorite: [item.id]};
+      const customKey = `${expected.prefix}:custom-answers`;
+      const custom = JSON.stringify({[item.id]: 'personal answer'});
+      const a = await app(new Map([[keyFor(item), JSON.stringify(initial)], [customKey, custom]]));
+      a.node('modeSelect').value = mode;
+      a.select(item, 'favorite');
+      a.node('revealBtn').listeners.click();
+      a.node('favoriteBtn').listeners.click();
+      assert.equal(a.run('current'), null);
+      assert.equal(a.run('revealed'), false);
+      assert.equal(a.node('promptName').textContent, '暂无题目');
+      assert.match(a.node('answerBox').innerHTML, /当前范围暂无题目/);
+      assert.deepEqual(a.json('filteredItems()'), []);
+      assert.equal(Number(a.node('totalCount').textContent), 0);
+      for (const id of ['revealBtn', 'knowBtn', 'againBtn', 'favoriteBtn', 'nextBtn', 'editAnswerBtn']) {
+        assert.equal(a.node(id).disabled, true, id);
+      }
+      const saved = a.store.get(keyFor(item));
+      a.mark('know'); a.mark('again');
+      a.node('favoriteBtn').listeners.click();
+      a.node('editAnswerBtn').listeners.click();
+      a.node('nextBtn').listeners.click();
+      assert.equal(a.run('current'), null);
+      assert.equal(a.store.get(keyFor(item)), saved, 'No stale review may mutate progress');
+      assert.deepEqual(a.state(), {...initial, favorite: []});
+      assert.equal(a.store.get(customKey), custom);
+      assert.equal(a.node('customModal').hidden, true);
+      assert.equal(a.node('chapterProgress').attributes['aria-valuenow'], '1');
+    });
+
+    test(`${edition}: ${item.subject}/${item.module} ${mode} removal selects remaining favorite only`, async () => {
+      const other = data.find(row => row.subject === item.subject && row.module === item.module && row.id !== item.id);
+      const a = await app(new Map([[keyFor(item), JSON.stringify({...blankState(), favorite: [item.id, other.id]})]]));
+      a.node('modeSelect').value = mode;
+      a.select(item, 'favorite');
+      a.run('activeCategory = "";');
+      a.node('revealBtn').listeners.click();
+      a.node('favoriteBtn').listeners.click();
+      assert.equal(a.run('current.id'), other.id);
+      assert.equal(a.run('revealed'), false);
+      assert.deepEqual(a.json('filteredItems().map(row => row.id)'), [other.id]);
+      assert.equal(Number(a.node('totalCount').textContent), 1);
+      assert.equal(a.node('favoriteBtn').attributes['aria-pressed'], 'true');
+      assert.equal(a.node('promptName').textContent, mode === 'forward' ? other.name : other.reversePrompt);
+      a.mark('again');
+      assert.deepEqual(a.state().review, [other.id], 'Marking must target the new current item');
+    });
+  }
+
+  const otherCategory = data.find(row => row.subject === item.subject && row.module === item.module && row.category !== item.category);
+  if (otherCategory) test(`${edition}: ${item.subject}/${item.module} favorites outside category do not prevent empty state`, async () => {
+    const other = otherCategory;
+    const a = await app(new Map([[keyFor(item), JSON.stringify({...blankState(), favorite: [item.id, other.id]})]]));
+    a.select(item, 'favorite');
+    a.node('favoriteBtn').listeners.click();
+    assert.equal(a.run('current'), null);
+    assert.deepEqual(a.state().favorite, [other.id]);
+    assert.deepEqual(a.json('filteredItems()'), []);
+  });
+
+  test(`${edition}: ${item.subject}/${item.module} removed and re-added favorite survives reload`, async () => {
+    const a = await app();
+    a.select(item);
+    a.node('favoriteBtn').listeners.click();
+    a.select(item, 'favorite');
+    a.node('favoriteBtn').listeners.click();
+    const emptyReload = await app(a.store);
+    emptyReload.select(item, 'favorite');
+    assert.equal(emptyReload.run('current'), null);
+    emptyReload.select(item, 'all');
+    emptyReload.node('favoriteBtn').listeners.click();
+    emptyReload.select(item, 'favorite');
+    assert.equal(emptyReload.run('current.id'), item.id);
+    const addedReload = await app(a.store);
+    addedReload.select(item, 'favorite');
+    assert.equal(addedReload.run('current.id'), item.id);
+    assert.deepEqual(addedReload.state().favorite, [item.id]);
+    assert.equal(addedReload.state().done, 0);
+  });
+
+  for (const pool of ['all', 'review']) {
+    test(`${edition}: ${item.subject}/${item.module} toggling favorites in ${pool} retains current answer`, async () => {
+      const a = await app(new Map([[keyFor(item), JSON.stringify({...blankState(), review: [item.id]})]]));
+      a.select(item, pool);
+      a.node('revealBtn').listeners.click();
+      for (const favorite of [true, false]) {
+        a.node('favoriteBtn').listeners.click();
+        assert.equal(a.run('current.id'), item.id);
+        assert.equal(a.run('revealed'), true);
+        assert.equal(a.node('favoriteBtn').attributes['aria-pressed'], String(favorite));
+      }
+      assert.deepEqual(a.state().review, [item.id]);
+      assert.equal(a.state().done, 0);
+    });
+  }
+}

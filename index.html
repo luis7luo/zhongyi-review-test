@@ -2286,6 +2286,10 @@
       const state = loadState();
       state.favorite = state.favorite.includes(current.id) ? state.favorite.filter(id => id !== current.id) : [...state.favorite, current.id];
       saveState(state);
+      if ($("poolSelect").value === "favorite") {
+        pick();
+        return;
+      }
       renderStats();
       updateActionAvailability();
     };
