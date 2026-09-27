@@ -2273,8 +2273,9 @@
         state.know = Number(state.know || 0) + 1;
         state.review = state.review.filter(id => id !== current.id);
         if (!state.mastered.includes(current.id)) state.mastered.push(current.id);
-      } else if (!state.review.includes(current.id)) {
-        state.review.push(current.id);
+      } else {
+        state.mastered = state.mastered.filter(id => id !== current.id);
+        if (!state.review.includes(current.id)) state.review.push(current.id);
       }
       saveState(state);
       pick();
