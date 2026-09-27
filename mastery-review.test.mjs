@@ -25,7 +25,7 @@ const blankState = () => ({done: 0, know: 0, review: [], mastered: [], favorite:
 
 // Run the unmodified page script and its real fetch/render startup. Only browser
 // boundaries are simulated; state transitions, persistence and rendering are real.
-async function app(store = new Map(), responses = {}) {
+async function app(store = new Map(), responses = {}, options = {}) {
   const nodes = new Map();
   function element() {
     const children = new Map();
@@ -59,7 +59,7 @@ async function app(store = new Map(), responses = {}) {
     document: {getElementById: node, querySelectorAll: () => [], body: element(), addEventListener() {}},
     localStorage: {
       getItem: key => store.get(key) ?? null,
-      setItem(key, value) { writes.push(key); store.set(key, String(value)); },
+      setItem(key, value) { if (options.denyWrites) throw new Error('storage denied'); writes.push(key); store.set(key, String(value)); },
     },
     window: {setTimeout: fn => fn(), matchMedia: () => ({matches: true})},
     fetch: async url => {
@@ -69,6 +69,7 @@ async function app(store = new Map(), responses = {}) {
     },
   });
   let startupError;
+  if (options.noObjectHasOwn) vm.runInContext('Object.hasOwn = undefined', context);
   try { await script.runInContext(context); } catch (error) { startupError = error; }
   // Drain the optional report's independent fetch/parse continuation.
   for (let i = 0; i < 12; i++) await Promise.resolve();
@@ -90,6 +91,153 @@ async function app(store = new Map(), responses = {}) {
 const response = value => async () => ({ok: true, json: async () => structuredClone(value)});
 const coreUrl = 'data/review_items.json';
 const reportUrl = 'data/extraction_report.json';
+
+// Literal expectations from the reviewed removed/added IDs and merge evidence.
+const legacyPairs = [
+  ['fangji-189-大黄廑虫丸', 'fangji-189-大黄䗪虫丸'],
+  ['fangji-242-萆薛分清饮', 'fangji-242-萆薢分清饮'],
+  ['fangji-266-葛花解醒汤', 'fangji-266-葛花解酲汤'],
+  ['zhenjiu-point-050-颧醪', 'zhenjiu-point-050-颧髎'],
+  ['zhenjiu-point-068-肩醪', 'zhenjiu-point-068-肩髎'],
+  ['zhenjiu-point-073-瞳子醪', 'zhenjiu-point-073-瞳子髎'],
+  ['zhenjiu-treatment-023-泄泻-急性泄泻', 'zhenjiu-treatment-021-泄泻-急性泄泻'],
+  ['zhenjiu-treatment-024-泄泻-慢性泄泻', 'zhenjiu-treatment-022-泄泻-慢性泄泻'],
+  ['zhenjiu-treatment-028-癃闭-实证', 'zhenjiu-treatment-026-癃闭-实证'],
+  ['zhenjiu-treatment-029-癃闭-虚证', 'zhenjiu-treatment-027-癃闭-虚证'],
+  ['zhenjiu-treatment-032-痹证', 'zhenjiu-treatment-031-痹证'],
+  ['zhenjiu-treatment-050-炸腮', 'zhenjiu-treatment-050-痄腮'],
+  ['zhenjiu-treatment-051-疙腮', 'zhenjiu-treatment-050-痄腮'],
+  ['zhenjiu-treatment-054-扭伤', 'zhenjiu-treatment-053-扭伤'],
+  ['zhenjiu-treatment-055-扭伤', 'zhenjiu-treatment-053-扭伤'],
+  ['zhenjiu-treatment-056-扭伤', 'zhenjiu-treatment-053-扭伤'],
+  ['zhenjiu-treatment-058-项痹', 'zhenjiu-treatment-057-项痹'],
+  ['zhenjiu-treatment-075-胆道蛔虫症', 'zhenjiu-treatment-074-胆道蛔虫症'],
+];
+const fullFixture = JSON.parse(readFileSync(new URL('data/review_items.json', import.meta.url), 'utf8'));
+test(`${edition}: migration allowlist accounts for all removed IDs except excluded 滚痰丸`, () => {
+  const evidence=JSON.parse(readFileSync(new URL('data/correction_report.json',import.meta.url),'utf8'));
+  assert.equal(legacyPairs.length,18);
+  assert.deepEqual(new Set([...legacyPairs.map(([id])=>id),'fangji-253-滚痰丸']),new Set(evidence.removed.map(x=>x.id)));
+  const targets=new Set(legacyPairs.map(([,id])=>id));
+  assert.equal(targets.size,15);
+  assert.ok(evidence.added.every(x=>targets.has(x.id)));
+  assert.ok([...targets].every(id=>fullFixture.some(x=>x.id===id)));
+});
+for (const [oldId, newId] of legacyPairs) {
+  const target = fullFixture.find(x => x.id === newId);
+  const inScope = data.some(x => x.id === newId);
+  for (const field of ['mastered','review','favorite']) {
+    test(`${edition}: legacy ${field} ${oldId} maps only to its in-scope exact target and persists`, async () => {
+      const initial = {...blankState(), done: 17, know: 9, [field]: [oldId], extra: 'keep'};
+      const store = new Map([[keyFor(target), JSON.stringify(initial)], ['unrelated', 'untouched']]);
+      const a = await app(store);
+      assert.equal(a.startupError, undefined);
+      const want = {...initial, [field]: [inScope ? newId : oldId]};
+      assert.deepEqual(JSON.parse(store.get(keyFor(target))), want);
+      assert.equal(store.get('unrelated'), 'untouched');
+      const reloaded = await app(store);
+      assert.equal(reloaded.startupError, undefined);
+      assert.deepEqual(JSON.parse(store.get(keyFor(target))), want);
+      assert.equal(reloaded.writes.length, 0, 'Migration must be idempotent');
+      if (inScope) {
+        reloaded.select(target, field === 'favorite' ? 'favorite' : 'all');
+        assert.equal(reloaded.run('current.id'), newId);
+        assert.deepEqual(reloaded.state()[field], [newId]);
+      } else assert.equal(a.writes.length, 0);
+    });
+  }
+  test(`${edition}: legacy custom answer ${oldId} transfers only in scope and does not resurrect after restore`, async () => {
+    const key = `${expected.prefix}:custom-answers`;
+    const a = await app(new Map([[key, JSON.stringify({[oldId]: 'my old answer', untouched: 'preserve'})]]));
+    assert.equal(a.startupError, undefined);
+    assert.deepEqual(JSON.parse(a.store.get(key)), {[inScope ? newId : oldId]: 'my old answer', untouched: 'preserve'});
+    if (inScope) {
+      a.select(target); assert.equal(a.run('directAnswerFor(current)'), 'my old answer');
+      a.node('restoreAnswerBtn').listeners.click();
+      const reloaded = await app(a.store); reloaded.select(target);
+      assert.equal(reloaded.run('directAnswerFor(current)'), target.primaryAnswer);
+      assert.equal(reloaded.json('customAnswers')[oldId], undefined);
+    }
+  });
+}
+
+const sprainTarget = fullFixture.find(x => x.id === 'zhenjiu-treatment-053-扭伤');
+const oldSprains = ['zhenjiu-treatment-054-扭伤','zhenjiu-treatment-055-扭伤','zhenjiu-treatment-056-扭伤'];
+const sprainInScope = data.some(x => x.id === sprainTarget.id);
+test(`${edition}: merged IDs deduplicate and review takes precedence only for migrated overlaps`, async () => {
+  const initial = {...blankState(), mastered: [oldSprains[0]], review: [oldSprains[1],sprainTarget.id], favorite: [...oldSprains,sprainTarget.id], done: 23, know: 12};
+  const a = await app(new Map([[keyFor(sprainTarget), JSON.stringify(initial)]]));
+  assert.deepEqual(JSON.parse(a.store.get(keyFor(sprainTarget))), sprainInScope ? {...initial, mastered: [], review: [sprainTarget.id], favorite: [sprainTarget.id]} : initial);
+  const again = await app(a.store);
+  assert.equal(again.writes.length, 0);
+  if (sprainInScope) { again.select(sprainTarget); again.mark('know'); assert.deepEqual(again.state().review, []); }
+});
+
+for (const conflict of [false,true]) test(`${edition}: merged custom answers ${conflict ? 'conflict is preserved without guessing' : 'identical values collapse safely'}`, async () => {
+  const key = `${expected.prefix}:custom-answers`;
+  const initial = {[oldSprains[0]]: 'answer A', [oldSprains[1]]: conflict ? 'answer B' : 'answer A'};
+  const a = await app(new Map([[key,JSON.stringify(initial)]]));
+  const stored = JSON.parse(a.store.get(key));
+  if (sprainInScope && conflict) {
+    for (const [id,value] of Object.entries(initial)) assert.equal(stored[id],value);
+    assert.equal(stored[sprainTarget.id],undefined);
+  } else assert.deepEqual(stored, sprainInScope ? {[sprainTarget.id]:'answer A'} : initial);
+});
+
+test(`${edition}: existing different current answer is never overwritten by legacy answer`, async () => {
+  const key = `${expected.prefix}:custom-answers`;
+  const initial = {[oldSprains[0]]:'old answer',[sprainTarget.id]:'current answer'};
+  const a = await app(new Map([[key,JSON.stringify(initial)]]));
+  for (const [id,value] of Object.entries(initial)) assert.equal(JSON.parse(a.store.get(key))[id],value);
+});
+
+test(`${edition}: conflicting legacy custom answer never resurrects after restore or other edits`, async () => {
+  const key = `${expected.prefix}:custom-answers`;
+  const initial = {[oldSprains[0]]:'old conflicting answer',[sprainTarget.id]:'current answer'};
+  const a = await app(new Map([[key,JSON.stringify(initial)]]));
+  if (!sprainInScope) { assert.deepEqual(JSON.parse(a.store.get(key)),initial); return; }
+  a.select(data[0]);a.node('customText').value='another personal answer';a.node('customSaveBtn').listeners.click();
+  a.select(sprainTarget);a.node('restoreAnswerBtn').listeners.click();
+  const reloaded=await app(a.store);reloaded.select(sprainTarget);
+  assert.equal(reloaded.run('directAnswerFor(current)'),sprainTarget.primaryAnswer);
+  assert.equal(JSON.parse(a.store.get(key))[oldSprains[0]],'old conflicting answer');
+  assert.equal(JSON.parse(a.store.get(key))[data[0].id],'another personal answer');
+  assert.equal(reloaded.writes.length,0);
+});
+
+test(`${edition}: migration write failure preserves originals and can retry after refresh`, async () => {
+  const key=keyFor(sprainTarget), customKey=`${expected.prefix}:custom-answers`;
+  const store=new Map([[key,JSON.stringify({...blankState(),favorite:oldSprains})],[customKey,JSON.stringify({[oldSprains[0]]:'old answer'})]]);
+  const before=new Map(store);
+  const a=await app(store,{}, {denyWrites:true});assert.equal(a.startupError,undefined);assert.deepEqual(store,before);
+  const retry=await app(store);assert.equal(retry.startupError,undefined);
+  assert.deepEqual(JSON.parse(store.get(key)).favorite,sprainInScope ? [sprainTarget.id] : oldSprains);
+});
+
+test(`${edition}: migration does not require newer Object.hasOwn browser API`, async () => {
+  const key=`${expected.prefix}:custom-answers`;
+  const a=await app(new Map([[key,JSON.stringify({[oldSprains[0]]:'legacy'})]]),{}, {noObjectHasOwn:true});
+  assert.equal(a.startupError,undefined);
+  assert.equal(JSON.parse(a.store.get(key))[sprainInScope ? sprainTarget.id : oldSprains[0]],'legacy');
+});
+
+test(`${edition}: excluded or unknown IDs and unrelated namespaces remain unmigrated`, async () => {
+  const state={...blankState(),mastered:['fangji-253-滚痰丸','unknown-id'],favorite:['fangji-253-滚痰丸']};
+  const store=new Map([
+    [`${expected.prefix}:方剂:方剂`,JSON.stringify(state)],
+    [`${expected.prefix}:custom-answers`,JSON.stringify({'fangji-253-滚痰丸':'keep me'})],
+    ['herb-review-state','paid sentinel'],
+    ['tcm-review-unrelated:v1:方剂:方剂',JSON.stringify({favorite:[legacyPairs[0][0]]})],
+  ]);
+  const before=new Map(store);const a=await app(store);
+  assert.equal(a.startupError,undefined);assert.deepEqual(store,before);assert.equal(a.writes.length,0);
+});
+
+test(`${edition}: invalid core data must not trigger any migration`, async () => {
+  const store=new Map([[keyFor(sprainTarget),JSON.stringify({...blankState(),favorite:oldSprains})]]);
+  const before=new Map(store);const a=await app(store,{[coreUrl]:response(null)});
+  assert.equal(a.startupError,undefined);assert.deepEqual(store,before);assert.equal(a.writes.length,0);
+});
 
 test(`${edition}: current edition badge matches actual data count`, () => {
   const badge = html.match(/class="edition-badge">([^<]+)</)[1];

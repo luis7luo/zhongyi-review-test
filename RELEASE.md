@@ -1,5 +1,9 @@
 # Multisubject Candidate Freeze — 2026-09-27
 
+Phase 5 compatibility update: see [migration and source evidence](docs/2026-09-27-phase5-compatibility.md).
+The current manifest includes that update; the Phase 4 checkpoint below remains
+an immutable historical baseline. New checkpoint: `work/private-checkpoints/multisubject-phase5-20260927/`.
+
 ## Scope and Authority
 
 Canonical local candidates: `work/zhongyi-review-test` and sibling `work/zhongyi-review-trial`.

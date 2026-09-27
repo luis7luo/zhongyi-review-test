@@ -1974,9 +1974,12 @@
     };
 
     const customAnswersKey = `${storagePrefix}:custom-answers`;
+    const legacyCustomHoldKey = "__legacyUnmigratedIds";
+    let legacyCustomHolds = [];
     const loadCustomAnswers = () => {
       try {
         const saved = JSON.parse(localStorage.getItem(customAnswersKey) || "{}");
+        legacyCustomHolds = isRecord(saved) && Array.isArray(saved[legacyCustomHoldKey]) ? saved[legacyCustomHoldKey].filter(isText) : [];
         return isRecord(saved) ? Object.fromEntries(Object.entries(saved).filter(([, value]) => isText(value))) : {};
       } catch {
         return {};
@@ -1984,9 +1987,95 @@
     };
     let customAnswers = loadCustomAnswers();
     const saveCustomAnswers = () => {
-      try { localStorage.setItem(customAnswersKey, JSON.stringify(customAnswers)); }
+      try {
+        const saved = legacyCustomHolds.length ? {...customAnswers, [legacyCustomHoldKey]: legacyCustomHolds} : customAnswers;
+        localStorage.setItem(customAnswersKey, JSON.stringify(saved));
+      }
       catch { /* 浏览器禁止本地存储时，本次页面仍可继续使用修改。 */ }
     };
+    // Only IDs supported by the recorded 826 -> 814 correction/merge evidence.
+    const legacyItemIds = new Map([
+      ["fangji-189-大黄廑虫丸", "fangji-189-大黄䗪虫丸"],
+      ["fangji-242-萆薛分清饮", "fangji-242-萆薢分清饮"],
+      ["fangji-266-葛花解醒汤", "fangji-266-葛花解酲汤"],
+      ["zhenjiu-point-050-颧醪", "zhenjiu-point-050-颧髎"],
+      ["zhenjiu-point-068-肩醪", "zhenjiu-point-068-肩髎"],
+      ["zhenjiu-point-073-瞳子醪", "zhenjiu-point-073-瞳子髎"],
+      ["zhenjiu-treatment-023-泄泻-急性泄泻", "zhenjiu-treatment-021-泄泻-急性泄泻"],
+      ["zhenjiu-treatment-024-泄泻-慢性泄泻", "zhenjiu-treatment-022-泄泻-慢性泄泻"],
+      ["zhenjiu-treatment-028-癃闭-实证", "zhenjiu-treatment-026-癃闭-实证"],
+      ["zhenjiu-treatment-029-癃闭-虚证", "zhenjiu-treatment-027-癃闭-虚证"],
+      ["zhenjiu-treatment-032-痹证", "zhenjiu-treatment-031-痹证"],
+      ["zhenjiu-treatment-050-炸腮", "zhenjiu-treatment-050-痄腮"],
+      ["zhenjiu-treatment-051-疙腮", "zhenjiu-treatment-050-痄腮"],
+      ["zhenjiu-treatment-054-扭伤", "zhenjiu-treatment-053-扭伤"],
+      ["zhenjiu-treatment-055-扭伤", "zhenjiu-treatment-053-扭伤"],
+      ["zhenjiu-treatment-056-扭伤", "zhenjiu-treatment-053-扭伤"],
+      ["zhenjiu-treatment-058-项痹", "zhenjiu-treatment-057-项痹"],
+      ["zhenjiu-treatment-075-胆道蛔虫症", "zhenjiu-treatment-074-胆道蛔虫症"],
+    ]);
+    const migrateLegacyRecords = () => {
+      const targets = new Map(items.map(item => [item.id, item]));
+      const eligible = [...legacyItemIds].filter(([, id]) => targets.has(id));
+      if (!eligible.length) return;
+      const updateStored = (key, migrate) => {
+        try {
+          const saved = JSON.parse(localStorage.getItem(key) || "null");
+          if (!isRecord(saved)) return;
+          const next = migrate(saved);
+          if (JSON.stringify(next) !== JSON.stringify(saved)) localStorage.setItem(key, JSON.stringify(next));
+        } catch { /* Keep the original record on read/write failure; retry next visit. */ }
+      };
+      const groups = new Map();
+      for (const [oldId, id] of eligible) {
+        const item = targets.get(id);
+        const key = `${storagePrefix}:${item.subject}:${item.module}`;
+        if (!groups.has(key)) groups.set(key, new Map());
+        groups.get(key).set(oldId, id);
+      }
+      for (const [key, aliases] of groups) updateStored(key, saved => {
+        const next = {...saved};
+        const touched = new Set();
+        for (const field of ["mastered", "review", "favorite"]) {
+          if (!Array.isArray(saved[field]) || !saved[field].some(id => aliases.has(id))) continue;
+          next[field] = [...new Set(saved[field].map(id => {
+            if (!aliases.has(id)) return id;
+            const target = aliases.get(id);
+            if (field !== "favorite") touched.add(target);
+            return target;
+          }))];
+        }
+        // No timestamps exist: a newly merged mastery conflict stays in review.
+        if (Array.isArray(next.mastered) && Array.isArray(next.review)) {
+          next.mastered = next.mastered.filter(id => !touched.has(id) || !next.review.includes(id));
+        }
+        return next;
+      });
+      updateStored(customAnswersKey, saved => {
+        const next = {...saved};
+        const holds = new Set(Array.isArray(saved[legacyCustomHoldKey]) ? saved[legacyCustomHoldKey].filter(isText) : []);
+        const byTarget = new Map();
+        for (const [oldId, id] of eligible) {
+          if (holds.has(oldId) || !Object.prototype.hasOwnProperty.call(saved, oldId) || !isText(saved[oldId])) continue;
+          if (!byTarget.has(id)) byTarget.set(id, []);
+          byTarget.get(id).push(oldId);
+        }
+        for (const [id, oldIds] of byTarget) {
+          const values = new Set(oldIds.map(oldId => saved[oldId]));
+          if (Object.prototype.hasOwnProperty.call(saved, id)) values.add(saved[id]);
+          if (values.size !== 1) {
+            // Remember conflicts so restoring a current answer cannot revive an old one.
+            oldIds.forEach(oldId => holds.add(oldId));
+            next[legacyCustomHoldKey] = [...holds];
+            continue;
+          }
+          next[id] = saved[oldIds[0]];
+          for (const oldId of oldIds) delete next[oldId];
+        }
+        return next;
+      });
+    };
+
     const defaultAnswerFor = (item) => item?.primaryAnswer || "见附加信息";
     const hasCustomAnswer = (item) => Boolean(item?.id && customAnswers[item.id]);
     const directAnswerFor = (item) => hasCustomAnswer(item) ? customAnswers[item.id] : defaultAnswerFor(item);
@@ -2461,6 +2550,8 @@
     updateActionAvailability();
     loadData().then(loaded => {
       if (!loaded) return;
+      migrateLegacyRecords();
+      customAnswers = loadCustomAnswers();
       renderAll();
       // Report metadata must never gate core review initialization.
       void loadReport();
