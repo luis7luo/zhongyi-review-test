@@ -25,7 +25,7 @@ const blankState = () => ({done: 0, know: 0, review: [], mastered: [], favorite:
 
 // Run the unmodified page script and its real fetch/render startup. Only browser
 // boundaries are simulated; state transitions, persistence and rendering are real.
-async function app(store = new Map()) {
+async function app(store = new Map(), responses = {}) {
   const nodes = new Map();
   function element() {
     const children = new Map();
@@ -64,14 +64,18 @@ async function app(store = new Map()) {
     window: {setTimeout: fn => fn(), matchMedia: () => ({matches: true})},
     fetch: async url => {
       assert.ok(['data/review_items.json', 'data/extraction_report.json'].includes(url));
+      if (responses[url]) return responses[url]();
       return {ok: true, json: async () => structuredClone(url.includes('review_items') ? data : report)};
     },
   });
-  await script.runInContext(context);
+  let startupError;
+  try { await script.runInContext(context); } catch (error) { startupError = error; }
+  // Drain the optional report's independent fetch/parse continuation.
+  for (let i = 0; i < 12; i++) await Promise.resolve();
   const run = source => vm.runInContext(source, context);
   const json = source => JSON.parse(run(`JSON.stringify(${source})`));
   return {
-    node, store, writes, run, json,
+    node, store, writes, run, json, startupError,
     state: () => json('loadState()'),
     select(item, pool = 'all') {
       node('poolSelect').value = pool;
@@ -81,6 +85,159 @@ async function app(store = new Map()) {
     mark(action) { node(action === 'know' ? 'knowBtn' : 'againBtn').listeners.click(); },
   };
 }
+
+// Phase 3 fault injection stays at the storage/fetch boundaries.
+const response = value => async () => ({ok: true, json: async () => structuredClone(value)});
+const coreUrl = 'data/review_items.json';
+const reportUrl = 'data/extraction_report.json';
+
+for (const field of ['done', 'know', 'review', 'mastered', 'favorite']) {
+  for (const bad of [null, 'wrong', {}, {toString: null, valueOf: null}, ...(field === 'done' || field === 'know' ? [[], -1, 1.5] : [42])]) {
+    test(`${edition}: storage ${field} rejects ${JSON.stringify(bad)} without losing other fields`, async () => {
+      const first = data[0];
+      const valid = {...blankState(), done: 12, know: 7, favorite: [first.id], extra: 'keep'};
+      const store = new Map([[keyFor(first), JSON.stringify({...valid, [field]: bad})], ['other-key', 'untouched']]);
+      const before = new Map(store);
+      const a = await app(store);
+      assert.equal(a.startupError, undefined);
+      assert.ok(a.run('current'));
+      assert.deepEqual(a.state(), {...valid, [field]: blankState()[field]});
+      assert.deepEqual(store, before, 'Recovery must not erase or eagerly rewrite stored data');
+      a.select(first); a.mark('know');
+      assert.equal(a.state().extra, 'keep');
+      assert.equal(store.get('other-key'), 'untouched');
+      assert.ok(Number.isSafeInteger(a.state().done));
+    });
+  }
+}
+
+for (const raw of ['{', 'null', '[]', '"wrong"', '42', '{}']) {
+  test(`${edition}: malformed/top-level storage ${raw} and missing optional fields recover`, async () => {
+    const a = await app(new Map([[keyFor(data[0]), raw]]));
+    assert.equal(a.startupError, undefined);
+    assert.deepEqual(a.state(), blankState());
+    assert.ok(a.run('current'));
+  });
+}
+
+test(`${edition}: invalid list entries are removed without losing valid IDs or cumulative stats`, async () => {
+  const id = data[0].id;
+  const mixed = [id, null, {}, [], 1, '', id];
+  const a = await app(new Map([[keyFor(data[0]), JSON.stringify({done: 12, know: 7, review: mixed, mastered: mixed, favorite: mixed})]]));
+  assert.equal(a.startupError, undefined);
+  assert.deepEqual(a.state(), {done: 12, know: 7, review: [id], mastered: [id], favorite: [id]});
+});
+
+for (const bad of [[], {}, 17, true, null, '']) {
+  test(`${edition}: invalid custom answer ${JSON.stringify(bad)} preserves other custom answers`, async () => {
+    const key = `${expected.prefix}:custom-answers`;
+    const raw = JSON.stringify({[data[0].id]: bad, [data[1].id]: 'valid personal answer'});
+    const a = await app(new Map([[key, raw]]));
+    assert.equal(a.startupError, undefined);
+    a.select(data[0]);
+    assert.equal(a.run('directAnswerFor(current)'), data[0].primaryAnswer);
+    a.select(data[1]);
+    assert.equal(a.run('directAnswerFor(current)'), 'valid personal answer');
+    assert.equal(a.store.get(key), raw);
+  });
+}
+
+test(`${edition}: valid storage and optional preferences remain compatible`, async () => {
+  const state = {...blankState(), done: 19, know: 8, favorite: [data[0].id], extra: {keep: true}};
+  const a = await app(new Map([[keyFor(data[0]), JSON.stringify(state)], [`${expected.prefix}:preferences`, '{"showCategoryHint":true}']]));
+  assert.equal(a.startupError, undefined);
+  assert.deepEqual(a.state(), state);
+  assert.equal(a.run('preferences.showCategoryHint'), true);
+  assert.equal(a.writes.length, 0);
+});
+
+test(`${edition}: missing optional state fields do not discard existing progress`, async () => {
+  const a = await app(new Map([[keyFor(data[0]), JSON.stringify({done: 12, mastered: [data[0].id]})]]));
+  assert.equal(a.startupError, undefined);
+  assert.deepEqual(a.state(), {...blankState(), done: 12, mastered: [data[0].id]});
+  assert.equal(a.writes.length, 0);
+});
+
+for (const raw of ['{', 'null', '[]', '"wrong"']) {
+  test(`${edition}: malformed custom-answer/preferences containers ${raw} do not block review`, async () => {
+    const a = await app(new Map([[`${expected.prefix}:custom-answers`, raw], [`${expected.prefix}:preferences`, raw]]));
+    assert.equal(a.startupError, undefined);
+    a.select(data[0]);
+    assert.equal(a.run('directAnswerFor(current)'), data[0].primaryAnswer);
+    assert.equal(a.run('preferences.showCategoryHint'), false);
+    assert.equal(a.writes.length, 0);
+  });
+}
+
+test(`${edition}: core optional display fields may be absent without blocking review`, async () => {
+  const minimal = {...data[0]};
+  for (const key of ['extra', 'reversePrompt', 'primaryLabel', 'source']) delete minimal[key];
+  const a = await app(new Map(), {[coreUrl]: response([minimal])});
+  assert.equal(a.startupError, undefined);
+  assert.equal(a.run('current.id'), minimal.id);
+  a.node('modeSelect').value = 'reverse'; a.run('pick()');
+  assert.equal(a.node('promptName').textContent, minimal.primaryAnswer);
+  a.node('revealBtn').listeners.click();
+  assert.equal(a.run('revealed'), true);
+});
+
+const invalidCore = [
+  ['invalid JSON', async () => ({ok: true, json: async () => JSON.parse('{')})],
+  ['missing file', async () => ({ok: false, status: 404})],
+  ['network failure', async () => { throw new TypeError('fetch failed'); }],
+  ...[null, {}, 'wrong', [], [null]].map(value => [JSON.stringify(value), response(value)]),
+  ['duplicate IDs', response([data[0], data[0]])],
+  ['invalid extra', response([{...data[0], extra: []}])],
+  ['invalid reverse prompt', response([{...data[0], reversePrompt: {}}])],
+  ['unknown subject/module', response([{...data[0], module: 'unknown'}])],
+];
+for (const field of ['id', 'subject', 'module', 'name', 'category', 'primaryAnswer']) {
+  for (const bad of [undefined, '', {}]) invalidCore.push([`${field}=${JSON.stringify(bad)}`, response([data[0], {...data[1], [field]: bad}])]);
+}
+for (const [label, fetchResponse] of invalidCore) {
+  test(`${edition}: core ${label} fails closed without partial questions or unhandled rejection`, async () => {
+    const a = await app(new Map([['other-key', 'keep']]), {[coreUrl]: fetchResponse});
+    assert.equal(a.startupError, undefined);
+    assert.deepEqual(a.json('items'), []);
+    assert.equal(a.run('current'), null);
+    assert.equal(a.node('promptName').textContent, '数据加载失败');
+    assert.match(a.node('answerBox').innerHTML, /题库/);
+    for (const id of ['knowBtn', 'againBtn', 'favoriteBtn', 'editAnswerBtn', 'nextBtn', 'revealBtn']) assert.equal(a.node(id).disabled, true, id);
+    a.mark('know'); a.mark('again'); a.run('pick()');
+    assert.equal(a.node('promptName').textContent, '数据加载失败');
+    assert.equal(a.run('current'), null);
+    assert.equal(a.writes.length, 0);
+    assert.equal(a.store.get('other-key'), 'keep');
+  });
+}
+
+for (const [label, fetchResponse] of [
+  ['404', async () => ({ok: false, status: 404})],
+  ['invalid JSON', async () => ({ok: true, json: async () => JSON.parse('{')})],
+  ['network rejection', async () => { throw new TypeError('fetch failed'); }],
+  ...[null, [], {counts: []}].map(value => [JSON.stringify(value), response(value)]),
+]) {
+  test(`${edition}: auxiliary ${label} is nonblocking and does not mislabel core data as failed`, async () => {
+    const a = await app(new Map(), {[reportUrl]: fetchResponse});
+    assert.equal(a.startupError, undefined);
+    assert.equal(a.run('items.length'), expected.count);
+    assert.ok(a.run('current'));
+    assert.match(a.node('sourceSummary').textContent, /报告.*未能加载/);
+    a.select(data[0]); a.mark('know');
+    assert.deepEqual(a.state().mastered, [data[0].id]);
+  });
+}
+
+test(`${edition}: pending auxiliary report cannot delay core review startup`, async () => {
+  let resolveReport;
+  const pending = new Promise(resolve => { resolveReport = resolve; });
+  const startup = app(new Map(), {[reportUrl]: () => pending});
+  const a = await Promise.race([startup, new Promise(resolve => setTimeout(() => resolve(null), 100))]);
+  resolveReport({ok: true, json: async () => report});
+  await startup;
+  assert.ok(a, 'Core review must initialize before auxiliary report resolves');
+  assert.ok(a.run('current'));
+});
 
 function assertMembership(a, item, mastered, review) {
   const state = a.state();

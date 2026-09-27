@@ -1909,7 +1909,10 @@
 
   <script>
     let items = [];
-    let extractionReport = {counts: {}, sources: []};
+    let extractionReport;
+    let dataLoadFailed = false;
+    const isRecord = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    const isText = (value) => typeof value === "string" && value.trim().length > 0;
     const storagePrefix = "tcm-review-test:v1";
     const preferencesKey = `${storagePrefix}:preferences`;
     const loadPreferences = () => {
@@ -1951,10 +1954,14 @@
     const loadState = () => {
       const base = {done: 0, know: 0, review: [], favorite: [], mastered: []};
       try {
-        const saved = Object.assign({}, base, JSON.parse(localStorage.getItem(stateKey()) || "{}"));
-        saved.review = Array.isArray(saved.review) ? saved.review : [];
-        saved.favorite = Array.isArray(saved.favorite) ? saved.favorite : [];
-        saved.mastered = Array.isArray(saved.mastered) ? saved.mastered : [];
+        const parsed = JSON.parse(localStorage.getItem(stateKey()) || "{}");
+        const saved = {...base, ...(isRecord(parsed) ? parsed : {})};
+        for (const key of ["done", "know"]) {
+          if (!Number.isSafeInteger(saved[key]) || saved[key] < 0) saved[key] = 0;
+        }
+        for (const key of ["review", "favorite", "mastered"]) {
+          saved[key] = Array.isArray(saved[key]) ? [...new Set(saved[key].filter(isText))] : [];
+        }
         return saved;
       } catch {
         return base;
@@ -1970,7 +1977,7 @@
     const loadCustomAnswers = () => {
       try {
         const saved = JSON.parse(localStorage.getItem(customAnswersKey) || "{}");
-        return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+        return isRecord(saved) ? Object.fromEntries(Object.entries(saved).filter(([, value]) => isText(value))) : {};
       } catch {
         return {};
       }
@@ -2230,6 +2237,7 @@
     };
 
     const pick = (preferredId = "") => {
+      if (dataLoadFailed) return;
       const pool = filteredItems();
       const previousId = current?.id;
       if (!pool.length) {
@@ -2346,6 +2354,12 @@
     };
 
     const renderSourceSummary = () => {
+      if (!extractionReport) {
+        $("sourceSummary").textContent = extractionReport === null
+          ? "资料报告未能加载，不影响题库复习。请以教材和课程要求为准。"
+          : "资料报告加载中，不影响题库复习。";
+        return;
+      }
       const counts = extractionReport.counts || {};
       $("sourceSummary").textContent = `完整题库：中药 ${counts["中药"] || 0} 条，方剂 ${counts["方剂"] || 0} 条，针灸穴位 ${counts["针灸-穴位"] || 0} 条，针灸病证选穴 ${counts["针灸-病证选穴"] || 0} 条。资料来自现有中药数据与已提供的方剂、针灸 Word，内容用于复习辅助，请以教材和课程要求为准。`;
     };
@@ -2359,23 +2373,55 @@
       pick();
     };
 
+    const validateReviewItems = (data) => {
+      if (!Array.isArray(data) || !data.length) return false;
+      const ids = new Set();
+      const modules = {"中药": ["功效"], "方剂": ["方剂"], "针灸": ["穴位", "病证选穴"]};
+      return data.every(item => {
+        if (!isRecord(item) || !["id", "subject", "module", "name", "category", "primaryAnswer"].every(key => isText(item[key]))) return false;
+        if (!subjects.includes(item.subject) || !modules[item.subject].includes(item.module) || ids.has(item.id)) return false;
+        if (["primaryLabel", "reversePrompt", "source"].some(key => item[key] !== undefined && typeof item[key] !== "string")) return false;
+        if (item.extra !== undefined && (!isRecord(item.extra) || !Object.values(item.extra).every(value => typeof value === "string"))) return false;
+        ids.add(item.id);
+        return true;
+      });
+    };
+
+    const loadReport = async () => {
+      try {
+        const response = await fetch("data/extraction_report.json", {cache: "no-store"});
+        if (!response.ok) throw new Error("report unavailable");
+        const report = await response.json();
+        const validCounts = value => isRecord(value) && Object.values(value).every(count => Number.isSafeInteger(count) && count >= 0);
+        if (!isRecord(report) || !validCounts(report.counts) || (report.fullCounts !== undefined && !validCounts(report.fullCounts))) throw new Error("invalid report");
+        extractionReport = report;
+      } catch {
+        extractionReport = null;
+      }
+      renderSourceSummary();
+    };
+
     const loadData = async () => {
       try {
-        const [itemsResponse, reportResponse] = await Promise.all([
-          fetch("data/review_items.json", {cache: "no-store"}),
-          fetch("data/extraction_report.json", {cache: "no-store"})
-        ]);
+        const itemsResponse = await fetch("data/review_items.json", {cache: "no-store"});
         if (!itemsResponse.ok) throw new Error("review_items.json 加载失败");
-        items = await itemsResponse.json();
-        extractionReport = reportResponse.ok ? await reportResponse.json() : {counts: {}, sources: []};
-      } catch (error) {
+        const data = await itemsResponse.json();
+        if (!validateReviewItems(data)) throw new Error("invalid review data");
+        items = data;
+        return true;
+      } catch {
+        dataLoadFailed = true;
+        items = [];
+        current = null;
+        revealed = false;
+        updateActionAvailability();
         $("promptName").textContent = "数据加载失败";
         $("promptLabel").textContent = "请刷新页面重试";
         $("answerBox").className = "answer-block is-hidden";
-        $("answerBox").innerHTML = `<p class="answer-placeholder">如果一直失败，可能是当前网络无法读取题库文件。</p>`;
+        $("answerBox").innerHTML = `<p class="answer-placeholder">题库无法读取或格式不正确，暂不能开始复习。请刷新页面重试；持续失败请联系维护者。</p>`;
         $("sessionStatus").textContent = "题库连接失败";
-        $("sourceSummary").textContent = error.message || "数据加载失败。";
-        throw error;
+        $("sourceSummary").textContent = "题库未加载，未更改学习记录。";
+        return false;
       }
     };
 
@@ -2412,7 +2458,13 @@
     $("searchScope").addEventListener("change", () => { if ($("searchInput").value.trim()) search(); });
     $("searchInput").addEventListener("keydown", event => { if (event.key === "Enter") search(); });
 
-    loadData().then(renderAll);
+    updateActionAvailability();
+    loadData().then(loaded => {
+      if (!loaded) return;
+      renderAll();
+      // Report metadata must never gate core review initialization.
+      void loadReport();
+    });
   </script>
 </body>
 </html>
