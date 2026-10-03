@@ -49,8 +49,12 @@ try {
   for (const name of rules.mergeAcupunctureTreatments) assert.equal(full.filter(x => x.module === '病证选穴' && x.name === name).length, 1, name);
   for (const name of rules.preserveAcupunctureAlternatives) assert.equal(full.filter(x => x.module === '病证选穴' && x.name === name).length, 2, name);
   const gate = full.find(x => x.id === 'zhenjiu-point-044-少泽');
-  assert.ok(gate.extra['主治'].includes('痣疯'), 'Unreviewed content-gate change');
-  console.log(`${edition}: PASS ${rows.length} unique items; hashes, metadata, corrections intact. Content gate remains OPEN: 少泽/痣疯.`);
+  const indications = '1.肩臂后侧痛，小指麻木疼痛2.乳疾：乳痈、乳少、产后缺乳3.急症、热证：昏迷、中风、癫狂、热病4.头面五官病：头痛、目翳、咽喉肿痛、耳聋耳鸣';
+  assert.equal(gate.extra['主治'], indications, 'Shaoze approved omission changed');
+  assert.equal(gate.primaryAnswer, `定位：${gate.extra['定位']}\n主治：${indications}`, 'Shaoze mirrored answer mismatch');
+  assert.ok(!JSON.stringify(full).includes('痣疯'), 'Shaoze suspicious term reintroduced');
+  assert.equal(manifest.contentGate, 'CLOSED by approved omission: 2026-10-03 Shaoze disposition');
+  console.log(`${edition}: PASS ${rows.length} unique items; hashes, metadata, corrections intact. Shaoze gate closed by approved omission.`);
 } catch (error) {
   console.error(`Candidate verification FAILED: ${error.message}`);
   process.exitCode = 1;

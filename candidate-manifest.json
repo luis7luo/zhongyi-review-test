@@ -1,12 +1,12 @@
 {
-  "version": "multisubject-rc-20260927-phase5",
+  "version": "multisubject-release-20261003",
   "dataFreezeCommit": "52a869b46b1ce37b375064c543b2e264c1cea85c",
-  "contentGate": "OPEN: zhenjiu-point-044-少泽 / 痣疯",
+  "contentGate": "CLOSED by approved omission: 2026-10-03 Shaoze disposition",
   "full": {
     "files": {
       "index.html": "37c45d4f2d0244f7755e6e2c94c82007862c0b82a41e9c67589ed5895c2d0514",
       ".nojekyll": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "data/review_items.json": "c259229cf535deef22db4676a02150b6f68379ec2b2ff6b09e1a0d732dde9ac3",
+      "data/review_items.json": "e369007fc83ee2c2a65390fb0cefb1a6ab5272bf9f834d0688a536e5356aae70",
       "data/extraction_report.json": "35b5682088d3c046d2bde408356141d5e2942eaf3b63b6988ee4c7d40d16507a",
       "data/correction_report.json": "e41c7ed53dbf2a2df1e503a845775e1d7be19ae941333d3d0f6cc540748531dc",
       "docs/evidence/tcm_corrections.json": "3f5053ef52c9c846a4c4c92becd29b9548882d1be8b82f6ece645c185012573c"

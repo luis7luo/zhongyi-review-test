@@ -73,3 +73,10 @@ test('trial stale edition badge fails even with an updated HTML checksum', () =>
   const result=check(({read,write}) => write('index.html',read('index.html').replace('免费体验版 · 111 题','免费体验版 · 112 题'),true),'trial');
   assert.notEqual(result.status,0);
 });
+
+test('Shaoze suspicious indication cannot return even with an updated data checksum', () => {
+  const result = check(({read, write}) => write('data/review_items.json',
+    read('data/review_items.json').replaceAll('昏迷、中风、癫狂、热病', '昏迷、中风、癫狂、痣疯、热病'), true));
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Shaoze/);
+});
