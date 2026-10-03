@@ -1,5 +1,10 @@
 # Multisubject Candidate Freeze — 2026-09-27
 
+Current release: [2026-10-03 release record](docs/2026-10-03-release.md).
+It supersedes the open content/device-gate statements below: Shaoze was disposed
+of by the user's approved minimal omission; untested devices are an explicitly
+accepted release risk. This remainder is retained as historical Phase 4/5 evidence.
+
 Phase 5 compatibility update: see [migration and source evidence](docs/2026-09-27-phase5-compatibility.md).
 The current manifest includes that update; the Phase 4 checkpoint below remains
 an immutable historical baseline. New checkpoint: `work/private-checkpoints/multisubject-phase5-20260927/`.
